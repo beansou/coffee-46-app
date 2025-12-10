@@ -106,6 +106,11 @@
             const remainingTimeInStep = Math.max(0, currentStep.duration - timeInCurrentStep);
             const progressPercent = Math.min(100, (timeInCurrentStep / currentStep.duration) * 100);
 
+            // 取得下一個累積目標重量，若無下一步則為總水量
+            const nextCumulativeWater = currentStepIndex < steps.length - 1 
+                                        ? Math.round(steps[currentStepIndex + 1].cumulative) 
+                                        : Math.round(totalWater);
+
             // --- 螢幕常亮邏輯 (Screen Wake Lock) ---
             useEffect(() => {
                 const requestWakeLock = async () => {
@@ -294,7 +299,7 @@
             if (countdown !== null) {
                 return (
                     <div className={`min-h-screen font-sans flex flex-col items-center justify-center animate-in fade-in duration-300 ${countdown === 0 ? 'bg-teal-600' : 'bg-amber-900'}`}>
-                        {/* 修正：恢復數字和 GO 的顏色 */}
+                        {/* 恢復數字和 GO 的顏色 */}
                         <div className={`text-[12rem] font-bold leading-none animate-bounce ${countdown === 0 ? 'text-yellow-300' : 'text-white'} transition-colors duration-300`}>
                             {countdown === 0 ? "GO!" : countdown}
                         </div>
@@ -399,10 +404,18 @@
                         ) : (
                             <>
                                 <div className="mb-8">
-                                    {/* 最上方的指令文字 */}
+                                    {/* 主要目標顯示區塊 */}
                                     <div className="text-stone-400 text-lg mb-2 uppercase tracking-widest">緩慢注水至</div>
                                     <div className="text-7xl font-bold font-mono text-white tracking-tighter transition-all duration-300">{Math.round(currentStep.cumulative)}<span className="text-3xl text-amber-500 ml-2">g</span></div>
+                                    
+                                    {/* 新增：下一個注水目標提示 */}
+                                    {currentStepIndex < steps.length - 1 && (
+                                        <div className="mt-2 text-stone-500 text-sm">
+                                            下一個注水的累積目標: <span className="text-stone-300 font-bold">{nextCumulativeWater}g</span>
+                                        </div>
+                                    )}
                                 </div>
+
                                 <div className="bg-stone-700/50 p-6 rounded-2xl w-full backdrop-blur-sm border border-stone-600">
                                     <div className="flex items-center justify-center gap-2 text-amber-400 font-bold text-xl mb-2"><Icons.Droplets /> {currentStep.text.split('(')[1].replace(')', '')}</div>
                                     
@@ -439,7 +452,11 @@
                                             <span className="text-amber-500 font-mono text-sm font-bold">
                                                 {formatTime(cumulativeTime)} <span className="text-xs font-normal opacity-75">({step.duration}s)</span>
                                             </span>
-                                            <span className="font-bold text-lg text-stone-300">+{Math.round(step.weight)}g</span>
+                                            {/* 顯示累積水量，括號中顯示當前新增水量 */}
+                                            <span className="font-bold text-lg text-stone-300">
+                                                {Math.round(step.cumulative)}g
+                                                <span className="font-normal text-sm text-stone-400"> (+{Math.round(step.weight)}g)</span>
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="text-right flex flex-col items-end">
