@@ -61,11 +61,13 @@
             
             const intervalRef = useRef(null);
             const audioCtxRef = useRef(null);
+            const wakeLockRef = useRef(null); // 用來保存螢幕鎖定的參照
 
             const totalWater = beans * ratio;
             const phase1Water = totalWater * 0.4;
             const phase2Water = totalWater * 0.6;
 
+            // ... (計算步驟邏輯保持不變)
             const getSteps = () => {
                 let steps = [];
                 let s1, s2;
@@ -96,6 +98,49 @@
             const remainingTimeInStep = Math.max(0, currentStep.duration - timeInCurrentStep);
             const progressPercent = Math.min(100, (timeInCurrentStep / currentStep.duration) * 100);
 
+            // --- 螢幕常亮邏輯 (Screen Wake Lock) ---
+            useEffect(() => {
+                const requestWakeLock = async () => {
+                    try {
+                        if ('wakeLock' in navigator) {
+                            wakeLockRef.current = await navigator.wakeLock.request('screen');
+                            console.log('螢幕鎖定已啟用');
+                        }
+                    } catch (err) {
+                        console.error('無法鎖定螢幕:', err);
+                    }
+                };
+
+                const releaseWakeLock = async () => {
+                    if (wakeLockRef.current !== null) {
+                        await wakeLockRef.current.release();
+                        wakeLockRef.current = null;
+                        console.log('螢幕鎖定已解除');
+                    }
+                };
+
+                // 當正在沖煮 (isBrewing) 或是正在倒數 (countdown !== null) 時，鎖定螢幕
+                if (isBrewing || countdown !== null) {
+                    requestWakeLock();
+                } else {
+                    releaseWakeLock();
+                }
+
+                // 當應用程式被切換到背景再回來時，可能需要重新鎖定
+                const handleVisibilityChange = () => {
+                    if (document.visibilityState === 'visible' && (isBrewing || countdown !== null)) {
+                        requestWakeLock();
+                    }
+                };
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+
+                return () => {
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                    releaseWakeLock();
+                };
+            }, [isBrewing, countdown]);
+
+
             // 音效播放函數
             const playBeep = (type) => {
                 if (!soundEnabled) return;
@@ -114,6 +159,7 @@
                 const now = ctx.currentTime;
 
                 if (type === 'tick') {
+                    // 倒數短音
                     osc.frequency.setValueAtTime(600, now);
                     osc.type = 'sine';
                     gain.gain.setValueAtTime(0.1, now);
@@ -121,16 +167,18 @@
                     osc.start(now);
                     osc.stop(now + 0.1);
                 } else if (type === 'start') {
+                    // 開始/換步驟長音 (修改：拉長到 1.2秒，並使用更平滑的淡出)
                     osc.frequency.setValueAtTime(880, now);
                     osc.type = 'sine';
                     gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    // 讓聲音延續 1.2 秒，跨越頁面切換的時間
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2); 
                     osc.start(now);
-                    osc.stop(now + 0.5);
+                    osc.stop(now + 1.2); 
                 }
             };
 
-            // 倒數邏輯 (Initial 3-2-1)
+            // 倒數邏輯
             useEffect(() => {
                 if (countdown === null) return;
                 
@@ -203,6 +251,7 @@
             
             const handleReset = () => { setIsBrewing(false); setTimer(0); setCurrentStepIndex(0); setCountdown(null); };
 
+            // UI 部分保持不變
             if (countdown !== null) {
                 return (
                     <div className={`min-h-screen font-sans flex flex-col items-center justify-center animate-in fade-in duration-300 ${countdown === 0 ? 'bg-teal-600' : 'bg-amber-900'}`}>
