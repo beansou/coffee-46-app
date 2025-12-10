@@ -30,6 +30,9 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
+        
+        // 設定 GO 畫面的額外停留時間 (1000ms = 1秒)
+        const GO_SCREEN_HOLD_DURATION_MS = 1000;
 
         // 簡單的圖示組件 (SVG)
         const Icon = ({ path }) => (
@@ -198,12 +201,15 @@
                     return () => clearTimeout(timerId);
                 } else {
                     playBeep('start'); 
+                    
+                    // 修正邏輯：延長 GO 畫面停留時間 (1000ms)，並在切換時將計時器校準
                     const startDelay = setTimeout(() => {
                         setCountdown(null);
-                        setTimer(0);
+                        // 將計時器設為 GO 畫面停留的秒數 (1 秒)，模擬計時器已在背景運行
+                        setTimer(GO_SCREEN_HOLD_DURATION_MS / 1000); 
                         setCurrentStepIndex(0);
                         setIsBrewing(true);
-                    }, 500);
+                    }, GO_SCREEN_HOLD_DURATION_MS); // GO 畫面停留 1 秒
                     return () => clearTimeout(startDelay);
                 }
             }, [countdown]);
@@ -288,10 +294,11 @@
             if (countdown !== null) {
                 return (
                     <div className={`min-h-screen font-sans flex flex-col items-center justify-center animate-in fade-in duration-300 ${countdown === 0 ? 'bg-teal-600' : 'bg-amber-900'}`}>
-                        <div className={`text-[12rem] font-bold leading-none animate-bounce ${countdown === 0 ? 'text-yellow-300' : 'text-white'}`}>
+                        {/* 修正：恢復數字和 GO 的顏色 */}
+                        <div className={`text-[12rem] font-bold leading-none animate-bounce ${countdown === 0 ? 'text-yellow-300' : 'text-white'} transition-colors duration-300`}>
                             {countdown === 0 ? "GO!" : countdown}
                         </div>
-                        <div className={`mt-8 text-2xl font-bold tracking-widest uppercase ${countdown === 0 ? 'text-teal-100' : 'text-amber-100'}`}>
+                        <div className={`mt-8 text-2xl font-bold tracking-widest uppercase ${countdown === 0 ? 'text-teal-100' : 'text-amber-100'} transition-colors duration-300`}>
                             {countdown === 0 ? "開始沖煮" : "準備注水"}
                         </div>
                     </div>
@@ -416,8 +423,8 @@
                             </>
                         )}
                     </div>
-                    {/* 調整：移除上方的間距，讓列表更緊貼上方的卡片 */}
-                    <div className="w-full max-w-md space-y-2 opacity-60"> 
+                    {/* 步驟列表間距 mt-4 */}
+                    <div className="w-full max-w-md mt-4 space-y-2 opacity-60"> 
                         {steps.map((step, idx) => {
                             let cumulativeTime = 0;
                             for (let i = 0; i <= idx; i++) {
