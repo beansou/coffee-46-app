@@ -557,27 +557,29 @@
                             // Brewing State
                             <>
                                 {/* Main Display */}
-                                <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+                                {/* 修改: 移除 -mt-10，加入 py-6 確保與頂部有距離 */}
+                                <div className="flex-1 flex flex-col items-center justify-center py-6 min-h-0">
                                     <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-4 animate-pulse">
                                         Target Weight
                                     </p>
                                     <div className="relative">
-                                        <h1 className="text-[7rem] font-thin leading-none text-white text-glow tabular-nums tracking-tighter">
+                                        {/* 修改: 字體改為響應式 text-7xl (手機) md:text-9xl (大螢幕) */}
+                                        <h1 className="text-7xl md:text-9xl font-thin leading-none text-white text-glow tabular-nums tracking-tighter transition-all">
                                             {Math.round(currentStep.cumulative)}
                                         </h1>
-                                        <span className="absolute -right-6 top-4 text-2xl text-white/30 font-light">g</span>
+                                        <span className="absolute -right-6 top-2 md:top-4 text-xl md:text-2xl text-white/30 font-light">g</span>
                                     </div>
                                     
-                                    {/* Next Target Indicator (Added Here) */}
+                                    {/* Next Target Indicator */}
                                     {currentStepIndex < steps.length - 1 && (
-                                        <div className="mt-2 mb-4 flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
+                                        <div className="mt-4 mb-2 flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
                                             <span className="text-[10px] text-white/40 uppercase tracking-widest">Next</span>
                                             <span className="text-sm text-white/90 font-mono font-bold">{nextCumulativeWater}g</span>
                                         </div>
                                     )}
                                     
                                     {/* Progress Bar */}
-                                    <div className="w-64 h-1.5 bg-white/10 rounded-full mt-6 overflow-hidden relative">
+                                    <div className="w-64 h-1.5 bg-white/10 rounded-full mt-6 overflow-hidden relative shrink-0">
                                         <div 
                                             className="absolute top-0 left-0 h-full bg-amber-500 shadow-[0_0_15px_#f59e0b] transition-all duration-1000 ease-linear"
                                             style={{ width: `${progressPercent}%` }}
@@ -592,7 +594,7 @@
 
                                 {/* Step Deck (Bottom) */}
                                 {/* 註：Step Deck 的高度已透過 flex 佈局自動調整，不再需要手動設置 h-[35vh] */}
-                                <div className="shrink-0 w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative"> 
+                                <div className="shrink-0 w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative max-h-[40vh]"> 
                                     <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full"></div>
                                     <h3 className="text-xs text-white/30 uppercase tracking-widest mb-4 ml-2">Timeline</h3>
                                     
