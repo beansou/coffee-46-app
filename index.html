@@ -55,7 +55,8 @@
         const CoffeeApp = () => {
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
-            const [flavor, setFlavor] = useState('balanced');
+            // 修正: 預設風味設定為 'sweet' (偏甜)
+            const [flavor, setFlavor] = useState('sweet');
             const [strength, setStrength] = useState('strong'); // Default strong
             const [isBrewing, setIsBrewing] = useState(false);
             const [timer, setTimer] = useState(0);
@@ -477,3 +478,4 @@
     </script>
 </body>
 </html>
+
