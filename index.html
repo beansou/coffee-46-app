@@ -231,6 +231,7 @@
             
             const beansInputRef = useRef(null);
             const ratioControlRef = useRef(null); // Ref for global click outside detection
+            const activeStepRef = useRef(null); // Ref for auto-scrolling timeline
 
             // Refs
             const intervalRef = useRef(null);
@@ -278,6 +279,16 @@
 
             // --- Effects (Audio/WakeLock/Timer) ---
             
+            // Auto Scroll Active Step into View
+            useEffect(() => {
+                if (activeStepRef.current) {
+                    activeStepRef.current.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center', // Center the active step in the container
+                    });
+                }
+            }, [currentStepIndex, isBrewing]);
+
             // Global Click Outside Handler for Ratio Editor
             useEffect(() => {
                 if (!isEditingRatio) return;
@@ -611,11 +622,12 @@
                         
                         {isFinished ? (
                             // Finished State
-                            <div className="flex-1 flex flex-col items-center justify-center p-8 animate-[float-slow_4s_infinite]">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center shadow-[0_0_50px_rgba(52,211,153,0.4)] mb-8">
+                            // 修改：justify-center -> justify-start, 加入 pt-12, 移除 animate-float-slow
+                            <div className="flex-1 flex flex-col items-center justify-start pt-12 p-8">
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center shadow-[0_0_50px_rgba(52,211,153,0.4)] mb-4">
                                     <Coffee size={40} className="text-white" />
                                 </div>
-                                <h2 className="4xl font-light text-white mb-2">Enjoy</h2>
+                                <h2 className="text-4xl font-light text-white mb-2">Enjoy</h2>
                                 <p className="text-white/50 tracking-widest uppercase text-sm mb-12">Brew Completed</p>
                                 
                                 <div className="glass-panel px-10 py-6 rounded-3xl text-center">
@@ -667,8 +679,9 @@
                                     </div>
                                 </div>
 
-                                {/* Step Deck (Bottom) - Removed mt-auto, added mt-8 to stick below content */}
-                                <div className="mt-8 w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative max-h-[40vh] flex flex-col"> 
+                                {/* Step Deck (Bottom) - Modified for flex layout and auto-scroll */}
+                                {/* 修改：flex-1 min-h-0 (解決 crop 問題), mt-4 (縮小上方間距) */}
+                                <div className="mt-4 w-full flex-1 min-h-0 glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative flex flex-col"> 
                                     <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full shrink-0"></div>
                                     <h3 className="text-xs text-white/30 uppercase tracking-widest mb-4 ml-2 shrink-0">Timeline</h3>
                                     
@@ -676,6 +689,8 @@
                                         {steps.map((step, idx) => (
                                             <div 
                                                 key={idx}
+                                                // Added ref for auto-scrolling
+                                                ref={idx === currentStepIndex ? activeStepRef : null}
                                                 className={`flex items-center justify-between p-4 rounded-2xl transition-all duration-500 ${
                                                     idx === currentStepIndex 
                                                         ? 'bg-white/10 border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.1)]' // Removed translate-x-2
@@ -726,7 +741,7 @@
                     <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[60%] bg-blue-900 opacity-20 blur-[120px] rounded-full animate-blob mix-blend-screen" style={{animationDelay: '2s'}}></div>
                     <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] bg-purple-900 opacity-10 blur-[80px] rounded-full animate-blob" style={{animationDelay: '4s'}}></div>
                     {/* Noise Texture */}
-                    <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/rect%3E")'}}></div>
+                    <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/rect%3E")'}}></div>
                 </div>
             );
         };
