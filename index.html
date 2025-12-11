@@ -429,13 +429,16 @@
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
                         <BackgroundEffect color={countdown === 0 ? "bg-amber-500" : "bg-cyan-500"} />
-                        <div className="relative z-10 flex flex-col items-center">
-                            <h1 className={`text-[12rem] font-extralight tracking-tighter leading-none transition-all duration-300 transform scale-100 ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>
-                                {countdown === 0 ? "GO" : countdown}
-                            </h1>
-                            <p className="text-xl tracking-[0.5em] uppercase text-white/60 mt-4 animate-pulse">
-                                {countdown === 0 ? "START BREWING" : "READY"}
-                            </p>
+                        <div className="relative z-10 flex flex-col items-center justify-center h-full w-full">
+                            <div className="relative flex items-center justify-center">
+                                {/* 修正：確保數字在寬度和字距上都正確置中 */}
+                                <h1 className={`text-[12rem] font-extralight leading-none transition-all duration-300 transform scale-100 tabular-nums text-center w-full ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>
+                                    {countdown === 0 ? "GO" : countdown}
+                                </h1>
+                                <p className="absolute top-full mt-4 text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse whitespace-nowrap">
+                                    {countdown === 0 ? "START BREWING" : "READY"}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 );
@@ -501,8 +504,8 @@
                                         className="accent-amber-500"
                                     />
                                     
-                                    {/* Target Water / Ratio Toggle Area */}
-                                    <div className="flex justify-between items-center text-xs text-white/30 mt-3 font-mono relative h-8">
+                                    {/* Target Water / Ratio Toggle Area - 移除 10g/40g 標示，置中顯示 TARGET */}
+                                    <div className="flex justify-center items-center text-xs text-white/30 mt-3 font-mono relative h-8">
                                         {isEditingRatio ? (
                                             <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-white/20">
                                                 <span className="text-white shrink-0 font-bold w-8 text-right">1:{ratio}</span>
@@ -512,25 +515,20 @@
                                                     onChange={(e) => setRatio(Number(e.target.value))}
                                                     className="w-full slider-ratio h-1"
                                                 />
-                                                {/* Check Button Removed */}
                                             </div>
                                         ) : (
                                             <>
-                                                <span>10g</span>
                                                 <span 
                                                     onClick={() => setIsEditingRatio(true)} 
                                                     className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10"
                                                 >
                                                     TARGET: {Math.round(totalWater)}ml <span className="text-white/50">(1:{ratio})</span>
                                                 </span>
-                                                <span>40g</span>
                                             </>
                                         )}
                                     </div>
                                 </div>
                             </section>
-
-                            {/* Ratio Control Section Removed - Merged into above */}
 
                             {/* Flavor Profile */}
                             <section className="space-y-3">
@@ -573,19 +571,18 @@
                             {/* Version Info (Moved to bottom right) */}
                             <div className="w-full flex justify-end py-4 pr-2">
                                 {/* Updated Version Style and Number */}
-                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.12</p>
+                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.14</p>
                             </div>
 
                         </main>
 
-                        {/* Floating Action Button */}
+                        {/* Floating Action Button - Redesigned Style */}
                         <div className="absolute bottom-8 left-0 right-0 flex justify-center z-20">
                             <button 
                                 onClick={handleStart}
-                                className="px-10 py-5 bg-white text-black rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95 transition-transform duration-200 hover:bg-gray-100"
+                                className="px-10 py-5 bg-amber-900/20 text-amber-500 rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.15)] border border-amber-500/50 backdrop-blur-xl active:scale-95 transition-all duration-200 hover:bg-amber-900/40 hover:text-amber-400"
                             >
-                                {/* Removed the blur/glow div causing artifacts */}
-                                <Play size={24} fill="black" />
+                                <Play size={24} className="fill-amber-500" />
                                 <span className="text-lg font-bold tracking-wide">START BREW</span>
                             </button>
                         </div>
