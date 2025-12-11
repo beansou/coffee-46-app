@@ -430,13 +430,14 @@
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
                         <BackgroundEffect color={countdown === 0 ? "bg-amber-500" : "bg-cyan-500"} />
                         <div className="relative z-10 flex flex-col items-center justify-center h-full w-full">
-                            <div className="relative flex items-center justify-center">
+                            {/* 修正：向上平移 -translate-y-12 以調整視覺置中 */}
+                            <div className="relative flex items-center justify-center transform -translate-y-12">
                                 {/* 修正：確保數字在寬度和字距上都正確置中 */}
                                 <h1 className={`text-[12rem] font-extralight leading-none transition-all duration-300 transform scale-100 tabular-nums text-center w-full ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>
                                     {countdown === 0 ? "GO" : countdown}
                                 </h1>
                                 <p className="absolute top-full mt-4 text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse whitespace-nowrap">
-                                    {countdown === 0 ? "START BREWING" : "READY"}
+                                    {countdown === 0 ? "START BREW" : "READY"}
                                 </p>
                             </div>
                         </div>
@@ -571,7 +572,7 @@
                             {/* Version Info (Moved to bottom right) */}
                             <div className="w-full flex justify-end py-4 pr-2">
                                 {/* Updated Version Style and Number */}
-                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.14</p>
+                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.15</p>
                             </div>
 
                         </main>
