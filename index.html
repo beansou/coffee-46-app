@@ -73,6 +73,16 @@
             background: rgba(255,255,255,0.1);
             border-radius: 2px;
         }
+
+        /* Custom Range Slider for Cyan (Ratio) */
+        input[type=range].slider-cyan::-webkit-slider-thumb {
+            background: #22d3ee; /* cyan-400 */
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+        input[type=range].slider-cyan::-webkit-slider-runnable-track {
+            background: rgba(34, 211, 238, 0.2);
+        }
         
         /* Glass Utilities */
         .glass-panel {
@@ -193,6 +203,12 @@
             </IconBase>
         );
 
+        const Check = (props) => (
+            <IconBase {...props}>
+                <polyline points="20 6 9 17 4 12" />
+            </IconBase>
+        );
+
         // --- Core Logic (Preserved) ---
         const GO_SCREEN_HOLD_DURATION_MS = 1000;
 
@@ -210,8 +226,11 @@
             
             // Editing State
             const [isEditingBeans, setIsEditingBeans] = useState(false);
+            const [isEditingRatio, setIsEditingRatio] = useState(false); 
             const [tempBeans, setTempBeans] = useState(20);
+            
             const beansInputRef = useRef(null);
+            const ratioControlRef = useRef(null); // Ref for global click outside detection
 
             // Refs
             const intervalRef = useRef(null);
@@ -259,6 +278,27 @@
 
             // --- Effects (Audio/WakeLock/Timer) ---
             
+            // Global Click Outside Handler for Ratio Editor
+            useEffect(() => {
+                if (!isEditingRatio) return;
+
+                const handleClickOutside = (e) => {
+                    // If click target is NOT inside the ratio control container, close it
+                    if (ratioControlRef.current && !ratioControlRef.current.contains(e.target)) {
+                        setIsEditingRatio(false);
+                    }
+                };
+
+                // Add listeners for mouse and touch events
+                document.addEventListener('mousedown', handleClickOutside);
+                document.addEventListener('touchstart', handleClickOutside);
+
+                return () => {
+                    document.removeEventListener('mousedown', handleClickOutside);
+                    document.removeEventListener('touchstart', handleClickOutside);
+                };
+            }, [isEditingRatio]);
+
             // Wake Lock
             useEffect(() => {
                 const requestWakeLock = async () => {
@@ -415,7 +455,7 @@
 
                         <main className="flex-1 overflow-y-auto px-6 pb-32 z-10 space-y-6 pt-4">
                             
-                            {/* Hero Bean Input */}
+                            {/* Coffee Beans & Ratio Section (Merged) */}
                             <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden group">
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50"></div>
                                 <h2 className="text-sm uppercase tracking-widest text-amber-500/80 mb-6 font-medium">Coffee Beans</h2>
@@ -449,38 +489,37 @@
                                         onChange={(e) => setBeans(Number(e.target.value))} 
                                         className="accent-amber-500"
                                     />
-                                    <div className="flex justify-between text-xs text-white/30 mt-3 font-mono">
-                                        <span>10g</span>
-                                        <span>TARGET: {Math.round(totalWater)}ml</span>
-                                        <span>40g</span>
+                                    
+                                    {/* Target Water / Ratio Toggle Area */}
+                                    <div className="flex justify-between items-center text-xs text-white/30 mt-3 font-mono relative h-8">
+                                        {isEditingRatio ? (
+                                            <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-cyan-500/30">
+                                                <span className="text-cyan-400 shrink-0 font-bold w-8 text-right">1:{ratio}</span>
+                                                <input 
+                                                    type="range" min="10" max="20" step="1"
+                                                    value={ratio}
+                                                    onChange={(e) => setRatio(Number(e.target.value))}
+                                                    className="w-full slider-cyan h-1"
+                                                />
+                                                {/* Check Button Removed */}
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <span>10g</span>
+                                                <span 
+                                                    onClick={() => setIsEditingRatio(true)} 
+                                                    className="cursor-pointer hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-cyan-500/20 hover:bg-cyan-900/10"
+                                                >
+                                                    TARGET: {Math.round(totalWater)}ml <span className="text-cyan-400/80">(1:{ratio})</span>
+                                                </span>
+                                                <span>40g</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </section>
 
-                            {/* Ratio Control (New Section) */}
-                            <section className="glass-panel rounded-2xl p-5">
-                                <div className="flex justify-between items-center mb-4">
-                                    <label className="flex items-center gap-2 text-sm text-white/60 uppercase tracking-wider font-medium">
-                                        <Droplets size={14} className="text-cyan-400"/> Water Ratio
-                                    </label>
-                                    <span className="text-xl font-light text-cyan-400 tabular-nums text-glow">
-                                        1 : {ratio}
-                                    </span>
-                                </div>
-                                <div className="px-2">
-                                    <input 
-                                        type="range" min="10" max="20" step="1" 
-                                        value={ratio} 
-                                        onChange={(e) => setRatio(Number(e.target.value))} 
-                                        className="w-full accent-cyan-400"
-                                    />
-                                    <div className="flex justify-between text-[10px] text-white/30 mt-2 font-mono uppercase tracking-wider">
-                                        <span>Strong (1:10)</span>
-                                        <span>Standard (1:15)</span>
-                                        <span>Light (1:20)</span>
-                                    </div>
-                                </div>
-                            </section>
+                            {/* Ratio Control Section Removed - Merged into above */}
 
                             {/* Flavor Profile */}
                             <section className="space-y-3">
@@ -523,7 +562,7 @@
                             {/* Version Info (Moved to bottom right) */}
                             <div className="w-full flex justify-end py-4 pr-2">
                                 {/* Updated Version Style and Number */}
-                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.4</p>
+                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.10</p>
                             </div>
 
                         </main>
@@ -532,11 +571,11 @@
                         <div className="absolute bottom-8 left-0 right-0 flex justify-center z-20">
                             <button 
                                 onClick={handleStart}
-                                className="group relative px-10 py-5 bg-white text-black rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform duration-300"
+                                className="px-10 py-5 bg-white text-black rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.3)] active:scale-95 transition-transform duration-200 hover:bg-gray-100"
                             >
-                                <div className="absolute inset-0 rounded-full bg-white blur-lg opacity-40 group-hover:opacity-60 transition-opacity"></div>
+                                {/* Removed the blur/glow div causing artifacts */}
                                 <Play size={24} fill="black" />
-                                <span className="text-lg font-bold tracking-wide relative z-10">START BREW</span>
+                                <span className="text-lg font-bold tracking-wide">START BREW</span>
                             </button>
                         </div>
                     </div>
@@ -639,7 +678,7 @@
                                                 key={idx}
                                                 className={`flex items-center justify-between p-4 rounded-2xl transition-all duration-500 ${
                                                     idx === currentStepIndex 
-                                                        ? 'bg-white/10 border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.1)] translate-x-2' 
+                                                        ? 'bg-white/10 border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.1)]' // Removed translate-x-2
                                                         : idx < currentStepIndex 
                                                             ? 'opacity-30 grayscale' 
                                                             : 'opacity-50'
