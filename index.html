@@ -74,14 +74,14 @@
             border-radius: 2px;
         }
 
-        /* Custom Range Slider for Cyan (Ratio) */
-        input[type=range].slider-cyan::-webkit-slider-thumb {
-            background: #22d3ee; /* cyan-400 */
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.8);
+        /* Custom Range Slider for Ratio (White/Mono) - Changed from Cyan */
+        input[type=range].slider-ratio::-webkit-slider-thumb {
+            background: #ffffff; 
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
             border: 2px solid rgba(255, 255, 255, 0.8);
         }
-        input[type=range].slider-cyan::-webkit-slider-runnable-track {
-            background: rgba(34, 211, 238, 0.2);
+        input[type=range].slider-ratio::-webkit-slider-runnable-track {
+            background: rgba(255, 255, 255, 0.2);
         }
         
         /* Glass Utilities */
@@ -504,13 +504,13 @@
                                     {/* Target Water / Ratio Toggle Area */}
                                     <div className="flex justify-between items-center text-xs text-white/30 mt-3 font-mono relative h-8">
                                         {isEditingRatio ? (
-                                            <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-cyan-500/30">
-                                                <span className="text-cyan-400 shrink-0 font-bold w-8 text-right">1:{ratio}</span>
+                                            <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-white/20">
+                                                <span className="text-white shrink-0 font-bold w-8 text-right">1:{ratio}</span>
                                                 <input 
                                                     type="range" min="10" max="20" step="1"
                                                     value={ratio}
                                                     onChange={(e) => setRatio(Number(e.target.value))}
-                                                    className="w-full slider-cyan h-1"
+                                                    className="w-full slider-ratio h-1"
                                                 />
                                                 {/* Check Button Removed */}
                                             </div>
@@ -519,9 +519,9 @@
                                                 <span>10g</span>
                                                 <span 
                                                     onClick={() => setIsEditingRatio(true)} 
-                                                    className="cursor-pointer hover:text-cyan-400 hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-cyan-500/20 hover:bg-cyan-900/10"
+                                                    className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10"
                                                 >
-                                                    TARGET: {Math.round(totalWater)}ml <span className="text-cyan-400/80">(1:{ratio})</span>
+                                                    TARGET: {Math.round(totalWater)}ml <span className="text-white/50">(1:{ratio})</span>
                                                 </span>
                                                 <span>40g</span>
                                             </>
@@ -573,7 +573,7 @@
                             {/* Version Info (Moved to bottom right) */}
                             <div className="w-full flex justify-end py-4 pr-2">
                                 {/* Updated Version Style and Number */}
-                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.11</p>
+                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.12</p>
                             </div>
 
                         </main>
