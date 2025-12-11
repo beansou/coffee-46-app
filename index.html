@@ -522,7 +522,8 @@
                             
                             {/* Version Info (Moved to bottom right) */}
                             <div className="w-full flex justify-end py-4 pr-2">
-                                <p className="text-[10px] text-white/10 font-mono tracking-widest hover:text-white/30 transition-colors">v2.3</p>
+                                {/* Updated Version Style and Number */}
+                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.4</p>
                             </div>
 
                         </main>
@@ -627,8 +628,8 @@
                                     </div>
                                 </div>
 
-                                {/* Step Deck (Bottom) - Push to bottom */}
-                                <div className="mt-auto w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative max-h-[35vh] flex flex-col"> 
+                                {/* Step Deck (Bottom) - Removed mt-auto, added mt-8 to stick below content */}
+                                <div className="mt-8 w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative max-h-[40vh] flex flex-col"> 
                                     <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full shrink-0"></div>
                                     <h3 className="text-xs text-white/30 uppercase tracking-widest mb-4 ml-2 shrink-0">Timeline</h3>
                                     
@@ -686,7 +687,7 @@
                     <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[60%] bg-blue-900 opacity-20 blur-[120px] rounded-full animate-blob mix-blend-screen" style={{animationDelay: '2s'}}></div>
                     <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] bg-purple-900 opacity-10 blur-[80px] rounded-full animate-blob" style={{animationDelay: '4s'}}></div>
                     {/* Noise Texture */}
-                    <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/rect%3E")'}}></div>
+                    <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/rect%3E")'}}></div>
                 </div>
             );
         };
