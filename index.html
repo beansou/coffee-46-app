@@ -403,6 +403,7 @@
                                     <Coffee size={20} className="text-amber-400" />
                                 </div>
                                 <div>
+                                    {/* Removed Version Tag from Header */}
                                     <h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
                                     <p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p>
                                 </div>
@@ -456,10 +457,35 @@
                                 </div>
                             </section>
 
+                            {/* Ratio Control (New Section) */}
+                            <section className="glass-panel rounded-2xl p-5">
+                                <div className="flex justify-between items-center mb-4">
+                                    <label className="flex items-center gap-2 text-sm text-white/60 uppercase tracking-wider font-medium">
+                                        <Droplets size={14} className="text-cyan-400"/> Water Ratio
+                                    </label>
+                                    <span className="text-xl font-light text-cyan-400 tabular-nums text-glow">
+                                        1 : {ratio}
+                                    </span>
+                                </div>
+                                <div className="px-2">
+                                    <input 
+                                        type="range" min="10" max="20" step="1" 
+                                        value={ratio} 
+                                        onChange={(e) => setRatio(Number(e.target.value))} 
+                                        className="w-full accent-cyan-400"
+                                    />
+                                    <div className="flex justify-between text-[10px] text-white/30 mt-2 font-mono uppercase tracking-wider">
+                                        <span>Strong (1:10)</span>
+                                        <span>Standard (1:15)</span>
+                                        <span>Light (1:20)</span>
+                                    </div>
+                                </div>
+                            </section>
+
                             {/* Flavor Profile */}
                             <section className="space-y-3">
                                 <label className="flex items-center gap-2 text-sm text-white/60 ml-2">
-                                    <Droplets size={14} /> Flavor (Phase 1)
+                                    <Coffee size={14} /> Flavor (Phase 1)
                                 </label>
                                 <div className="grid grid-cols-3 gap-3">
                                     {[{id: 'sweet', label: 'Sweet', sub: '少酸'}, {id: 'balanced', label: 'Balance', sub: '平衡'}, {id: 'acidic', label: 'Acidity', sub: '明亮'}].map(opt => (
@@ -493,6 +519,11 @@
                                     ))}
                                 </div>
                             </section>
+                            
+                            {/* Version Info (Moved to bottom right) */}
+                            <div className="w-full flex justify-end py-4 pr-2">
+                                <p className="text-[10px] text-white/10 font-mono tracking-widest hover:text-white/30 transition-colors">v2.3</p>
+                            </div>
 
                         </main>
 
@@ -521,19 +552,22 @@
                     
                     {/* Top Bar - 提升 z-index 並確保其高度不被 main 內容覆蓋 */}
                     <header className="pt-14 pb-2 px-6 flex justify-between items-center z-20 relative"> 
-                        <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white">
+                        <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white z-30">
                             {isFinished ? <X size={20}/> : <RotateCcw size={18} />}
                         </button>
-                        <div className="font-mono text-xl tracking-widest text-white/80 tabular-nums">
+                        
+                        {/* ABSOLUTE CENTERED TIMER - 修正對齊問題 */}
+                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 pt-12 font-mono text-xl tracking-widest text-white/80 tabular-nums">
                             {formatTime(timer)}
                         </div>
-                        <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60">
+
+                        <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 z-30">
                             {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                         </button>
                     </header>
 
-                    {/* Main Content Area - 現在它在 header 下方，並佔據剩餘空間 */}
-                    <main className="flex-1 z-10 flex flex-col relative"> 
+                    {/* Main Content Area - 從 justify-center 改為 justify-start 並增加 padding-top 讓內容靠上 */}
+                    <main className="flex-1 z-10 flex flex-col items-center justify-start pt-12 relative min-h-0"> 
                         
                         {isFinished ? (
                             // Finished State
@@ -557,17 +591,18 @@
                             // Brewing State
                             <>
                                 {/* Main Display */}
-                                {/* 修改: 移除 -mt-10，加入 py-6 確保與頂部有距離 */}
-                                <div className="flex-1 flex flex-col items-center justify-center py-6 min-h-0">
+                                <div className="flex flex-col items-center justify-center w-full">
                                     <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-4 animate-pulse">
                                         Target Weight
                                     </p>
-                                    <div className="relative">
+                                    
+                                    {/* 修正: 使用 Flexbox 確保整組數字+單位是視覺置中的 */}
+                                    <div className="flex items-baseline justify-center gap-1 transition-all">
                                         {/* 修改: 字體改為響應式 text-7xl (手機) md:text-9xl (大螢幕) */}
-                                        <h1 className="text-7xl md:text-9xl font-thin leading-none text-white text-glow tabular-nums tracking-tighter transition-all">
+                                        <h1 className="text-7xl md:text-9xl font-thin leading-none text-white text-glow tabular-nums tracking-tighter">
                                             {Math.round(currentStep.cumulative)}
                                         </h1>
-                                        <span className="absolute -right-6 top-2 md:top-4 text-xl md:text-2xl text-white/30 font-light">g</span>
+                                        <span className="text-xl md:text-2xl text-white/30 font-light">g</span>
                                     </div>
                                     
                                     {/* Next Target Indicator */}
@@ -592,13 +627,12 @@
                                     </div>
                                 </div>
 
-                                {/* Step Deck (Bottom) */}
-                                {/* 註：Step Deck 的高度已透過 flex 佈局自動調整，不再需要手動設置 h-[35vh] */}
-                                <div className="shrink-0 w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative max-h-[40vh]"> 
-                                    <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full"></div>
-                                    <h3 className="text-xs text-white/30 uppercase tracking-widest mb-4 ml-2">Timeline</h3>
+                                {/* Step Deck (Bottom) - Push to bottom */}
+                                <div className="mt-auto w-full glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative max-h-[35vh] flex flex-col"> 
+                                    <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full shrink-0"></div>
+                                    <h3 className="text-xs text-white/30 uppercase tracking-widest mb-4 ml-2 shrink-0">Timeline</h3>
                                     
-                                    <div className="space-y-3 overflow-y-auto h-full pb-20 no-scrollbar mask-gradient">
+                                    <div className="space-y-3 overflow-y-auto pb-20 no-scrollbar mask-gradient flex-1">
                                         {steps.map((step, idx) => (
                                             <div 
                                                 key={idx}
@@ -611,7 +645,7 @@
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-4">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${
+                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
                                                         idx === currentStepIndex ? 'border-amber-500 text-amber-500 bg-amber-500/10' : 'border-white/20 text-white/40'
                                                     }`}>
                                                         {idx + 1}
