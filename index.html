@@ -167,6 +167,18 @@
             </IconBase>
         );
 
+        const Thermometer = (props) => (
+            <IconBase {...props}>
+                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
+            </IconBase>
+        );
+        
+        const ChevronDown = (props) => (
+            <IconBase {...props}>
+                <polyline points="6 9 12 15 18 9" />
+            </IconBase>
+        );
+
         const Play = (props) => (
             <IconBase {...props}>
                 <polygon points="5 3 19 12 5 21 5 3" />
@@ -218,11 +230,15 @@
             const [ratio, setRatio] = useState(15);
             const [flavor, setFlavor] = useState('sweet'); // sweet, balanced, acidic
             const [strength, setStrength] = useState('strong'); // standard, strong
+            // Removed roast state as it's just a hint now
             const [isBrewing, setIsBrewing] = useState(false);
             const [timer, setTimer] = useState(0);
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
+            
+            // UI State
+            const [isTempGuideOpen, setIsTempGuideOpen] = useState(false);
             
             // Editing State
             const [isEditingBeans, setIsEditingBeans] = useState(false);
@@ -568,11 +584,44 @@
                                     ))}
                                 </div>
                             </section>
+
+                            {/* Water Temperature Section - Collapsible Accordion */}
+                            <section className="space-y-3">
+                                <button
+                                    onClick={() => setIsTempGuideOpen(!isTempGuideOpen)}
+                                    className="flex items-center w-full text-left group"
+                                >
+                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2 group-hover:text-white/80 transition-colors">
+                                        <Thermometer size={14} />
+                                        <span>Temp Guide</span>
+                                    </div>
+                                    <div className={`ml-2 transition-transform duration-300 ${isTempGuideOpen ? 'rotate-180' : ''}`}>
+                                         <ChevronDown size={14} className="text-white/40" />
+                                    </div>
+                                </button>
+
+                                {isTempGuideOpen && (
+                                    <div className="grid grid-cols-3 gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-xs text-white/40 mb-1">Light</span>
+                                            <span className="text-sm font-mono text-white/90">93°C</span>
+                                        </div>
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-xs text-white/40 mb-1">Medium</span>
+                                            <span className="text-sm font-mono text-white/90">88°C</span>
+                                        </div>
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-xs text-white/40 mb-1">Dark</span>
+                                            <span className="text-sm font-mono text-white/90">83°C</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </section>
                             
                             {/* Version Info (Moved to bottom right) */}
                             <div className="w-full flex justify-end py-4 pr-2">
                                 {/* Updated Version Style and Number */}
-                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.15</p>
+                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.20</p>
                             </div>
 
                         </main>
