@@ -8,7 +8,16 @@
     <!-- iOS PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="4:6 Brew">
     <meta name="theme-color" content="#000000">
+
+    <!-- 
+       UPDATED APP ICON (v3.6): 
+       Linked to local file 'my_coffee_logo.png' hosted on your GitHub.
+       This will work when deployed to the same directory as this HTML file.
+    -->
+    <link rel="apple-touch-icon" href="my_coffee_logo.png">
+    <link rel="icon" type="image/png" href="my_coffee_logo.png">
 
     <!-- Dependencies -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -16,8 +25,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Removed external lucide scripts to prevent ReferenceErrors -->
-
+    <!-- CSS (Strictly following v2.20) -->
     <style>
         /* iOS 26 Base Styles */
         body { 
@@ -74,7 +82,7 @@
             border-radius: 2px;
         }
 
-        /* Custom Range Slider for Ratio (White/Mono) - Changed from Cyan */
+        /* Custom Range Slider for Ratio */
         input[type=range].slider-ratio::-webkit-slider-thumb {
             background: #ffffff; 
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
@@ -113,9 +121,6 @@
         .text-glow {
             text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
-        .text-glow-amber {
-            text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
-        }
     </style>
 </head>
 <body>
@@ -124,13 +129,13 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // --- Internal Icon Components (Replacing External Dependency) ---
-        const IconBase = ({ size = 24, className = "", children }) => (
+        // --- Internal Icon Components ---
+        const IconBase = ({ size = 24, className = "", children, viewBox="0 0 24 24" }) => (
             <svg 
                 xmlns="http://www.w3.org/2000/svg" 
                 width={size} 
                 height={size} 
-                viewBox="0 0 24 24" 
+                viewBox={viewBox} 
                 fill="none" 
                 stroke="currentColor" 
                 strokeWidth="2" 
@@ -140,6 +145,24 @@
             >
                 {children}
             </svg>
+        );
+
+        // --- APP LOGO (Maintained v3.1 Style) ---
+        const AppLogo = ({ size = 42 }) => (
+            <div 
+                className="rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center border border-white/10 relative overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                style={{ width: size, height: size }}
+            >
+                <svg width={size*0.6} height={size*0.6} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
+                     {/* Stylized V60 Dripper */}
+                    <path d="M4 6h16l-8 16L4 6z" strokeWidth="1.5" />
+                    <path d="M4 6h16" strokeWidth="1.5" />
+                    {/* Glowing Drop */}
+                    <circle cx="12" cy="14" r="2" fill="currentColor" className="animate-pulse" />
+                </svg>
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-amber-500/10 blur-md rounded-full"></div>
+            </div>
         );
 
         const Coffee = (props) => (
@@ -152,14 +175,7 @@
             </IconBase>
         );
 
-        const Droplets = (props) => (
-            <IconBase {...props}>
-                <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.8-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
-                <path d="M17 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S17.29 6.75 17 5.3c-.29 1.45-1.14 2.8-2.29 3.76S13 11.1 13 12.25c0 2.22 1.8 4.05 4 4.05z" />
-            </IconBase>
-        );
-
-        const Timer = (props) => (
+        const TimerIcon = (props) => (
             <IconBase {...props}>
                 <line x1="10" x2="14" y1="2" y2="2" />
                 <line x1="12" x2="15" y1="14" y2="11" />
@@ -215,22 +231,95 @@
             </IconBase>
         );
 
-        const Check = (props) => (
-            <IconBase {...props}>
-                <polyline points="20 6 9 17 4 12" />
+        const ClipboardList = (props) => (
+             <IconBase {...props}>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
             </IconBase>
         );
 
-        // --- Core Logic (Preserved) ---
+        // --- "Flow" Segmented Timer ---
+        const SegmentedTimer = ({ steps, currentStepIndex, remainingTimeInStep, currentStepDuration, size = 280, children }) => {
+            const strokeWidth = 10;
+            const radius = (size - strokeWidth) / 2;
+            const circumference = radius * 2 * Math.PI;
+            const totalSteps = steps.length;
+            const gap = 12;
+            const segmentLength = (circumference / totalSteps) - gap;
+
+            return (
+                <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+                    <svg className="absolute top-0 left-0 w-full h-full transform -rotate-90">
+                        {steps.map((_, index) => {
+                            const rotation = (index / totalSteps) * 360;
+                            const isActive = index === currentStepIndex;
+                            const isPast = index < currentStepIndex;
+                            const isFuture = index > currentStepIndex;
+                            
+                            // Visual Logic:
+                            let progress = 0;
+                            if (isActive) {
+                                progress = 1 - Math.max(0, Math.min(1, remainingTimeInStep / currentStepDuration));
+                            } else if (isPast) {
+                                progress = 1;
+                            }
+                            
+                            const dashArray = `${segmentLength} ${circumference - segmentLength}`;
+                            
+                            return (
+                                <g key={index} transform={`rotate(${rotation} ${size/2} ${size/2})`}>
+                                    <circle
+                                        cx={size / 2}
+                                        cy={size / 2}
+                                        r={radius}
+                                        fill="transparent"
+                                        stroke={isFuture ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.9)"} // Gray vs White
+                                        strokeWidth={strokeWidth}
+                                        strokeDasharray={dashArray}
+                                        strokeDashoffset={0}
+                                        strokeLinecap="round"
+                                        style={{ 
+                                            transition: 'stroke 1.5s ease-in-out',
+                                            filter: isActive ? 'drop-shadow(0 0 5px rgba(255,255,255,0.3))' : 'none'
+                                        }}
+                                    />
+                                    {(isActive || isPast) && (
+                                        <circle
+                                            cx={size / 2}
+                                            cy={size / 2}
+                                            r={radius}
+                                            fill="transparent"
+                                            stroke="#f59e0b" // Amber
+                                            strokeWidth={strokeWidth}
+                                            strokeDasharray={`${segmentLength * progress} ${circumference - (segmentLength * progress)}`}
+                                            strokeDashoffset={0} 
+                                            strokeLinecap="round"
+                                            style={{ 
+                                                transition: isActive ? 'stroke-dasharray 1s linear' : 'none',
+                                                filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))'
+                                            }}
+                                        />
+                                    )}
+                                </g>
+                            );
+                        })}
+                    </svg>
+                    <div className="relative z-10 flex flex-col items-center justify-center">
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Core Logic ---
         const GO_SCREEN_HOLD_DURATION_MS = 1000;
 
         const App = () => {
             // State
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
-            const [flavor, setFlavor] = useState('sweet'); // sweet, balanced, acidic
-            const [strength, setStrength] = useState('strong'); // standard, strong
-            // Removed roast state as it's just a hint now
+            const [flavor, setFlavor] = useState('sweet');
+            const [strength, setStrength] = useState('strong');
             const [isBrewing, setIsBrewing] = useState(false);
             const [timer, setTimer] = useState(0);
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -246,8 +335,7 @@
             const [tempBeans, setTempBeans] = useState(20);
             
             const beansInputRef = useRef(null);
-            const ratioControlRef = useRef(null); // Ref for global click outside detection
-            const activeStepRef = useRef(null); // Ref for auto-scrolling timeline
+            const ratioControlRef = useRef(null);
 
             // Refs
             const intervalRef = useRef(null);
@@ -262,13 +350,12 @@
             const getSteps = () => {
                 let steps = [];
                 let s1, s2;
-                // 4:6 Method Logic
                 if (flavor === 'sweet') { s1 = phase1Water * 0.4; s2 = phase1Water * 0.6; }
                 else if (flavor === 'acidic') { s1 = phase1Water * 0.6; s2 = phase1Water * 0.4; }
                 else { s1 = phase1Water * 0.5; s2 = phase1Water * 0.5; } // balanced
                 
-                steps.push({ weight: s1, cumulative: s1, text: "悶蒸 (Bloom)", duration: 45, phase: 'Flavor' });
-                steps.push({ weight: s2, cumulative: s1 + s2, text: "注水 (Flavor)", duration: 45, phase: 'Flavor' });
+                steps.push({ weight: s1, cumulative: s1, text: "Bloom", duration: 45, phase: 'Flavor' });
+                steps.push({ weight: s2, cumulative: s1 + s2, text: "Flavor", duration: 45, phase: 'Flavor' });
 
                 const strengthCount = strength === 'strong' ? 3 : 2;
                 const perStep = phase2Water / strengthCount;
@@ -276,7 +363,7 @@
 
                 for (let i = 0; i < strengthCount; i++) {
                     currentCumulative += perStep;
-                    steps.push({ weight: perStep, cumulative: currentCumulative, text: `注水 (Strength ${i+1})`, duration: 45, phase: 'Strength' });
+                    steps.push({ weight: perStep, cumulative: currentCumulative, text: `Strength ${i+1}`, duration: 45, phase: 'Strength' });
                 }
                 return steps;
             };
@@ -288,45 +375,28 @@
             const currentStepStartTime = steps.slice(0, currentStepIndex).reduce((acc, s) => acc + s.duration, 0);
             const timeInCurrentStep = timer - currentStepStartTime;
             const remainingTimeInStep = Math.max(0, currentStep.duration - timeInCurrentStep);
-            const progressPercent = Math.min(100, (timeInCurrentStep / currentStep.duration) * 100);
+            
             const nextCumulativeWater = currentStepIndex < steps.length - 1 
                                         ? Math.round(steps[currentStepIndex + 1].cumulative) 
-                                        : Math.round(totalWater);
+                                        : null;
 
-            // --- Effects (Audio/WakeLock/Timer) ---
+            // --- Effects ---
             
-            // Auto Scroll Active Step into View
-            useEffect(() => {
-                if (activeStepRef.current) {
-                    activeStepRef.current.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center', // Center the active step in the container
-                    });
-                }
-            }, [currentStepIndex, isBrewing]);
-
-            // Global Click Outside Handler for Ratio Editor
             useEffect(() => {
                 if (!isEditingRatio) return;
-
                 const handleClickOutside = (e) => {
-                    // If click target is NOT inside the ratio control container, close it
                     if (ratioControlRef.current && !ratioControlRef.current.contains(e.target)) {
                         setIsEditingRatio(false);
                     }
                 };
-
-                // Add listeners for mouse and touch events
                 document.addEventListener('mousedown', handleClickOutside);
                 document.addEventListener('touchstart', handleClickOutside);
-
                 return () => {
                     document.removeEventListener('mousedown', handleClickOutside);
                     document.removeEventListener('touchstart', handleClickOutside);
                 };
             }, [isEditingRatio]);
 
-            // Wake Lock
             useEffect(() => {
                 const requestWakeLock = async () => {
                     try {
@@ -349,12 +419,18 @@
                 return () => releaseWakeLock();
             }, [isBrewing, countdown]);
 
-            // Audio
+            const initAudio = () => {
+                if (!audioCtxRef.current) {
+                    audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                } else if (audioCtxRef.current.state === 'suspended') {
+                    audioCtxRef.current.resume();
+                }
+                return audioCtxRef.current;
+            };
+
             const playBeep = (type) => {
                 if (!soundEnabled) return;
-                if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-                
-                const ctx = audioCtxRef.current;
+                const ctx = initAudio();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
@@ -376,7 +452,27 @@
                 }
             };
 
-            // Countdown Logic
+            const playSuccessSound = () => {
+                if (!soundEnabled) return;
+                const ctx = initAudio();
+                const now = ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    const startTime = now + (i * 0.1); 
+                    osc.frequency.setValueAtTime(freq, startTime);
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
+                    osc.start(startTime);
+                    osc.stop(startTime + 1.5);
+                });
+            };
+
             useEffect(() => {
                 if (countdown === null) return;
                 if (countdown > 0) {
@@ -395,7 +491,6 @@
                 }
             }, [countdown]);
 
-            // Brewing Logic
             useEffect(() => {
                 if (isBrewing) {
                     intervalRef.current = setInterval(() => setTimer(prev => prev + 1), 1000);
@@ -403,29 +498,35 @@
                 return () => clearInterval(intervalRef.current);
             }, [isBrewing]);
 
-            // Step Transitions
             useEffect(() => {
                 if (!isBrewing) return;
                 let timeAccumulated = 0;
                 for (let i = 0; i < currentStepIndex; i++) timeAccumulated += steps[i].duration;
                 const stepEndTime = timeAccumulated + currentStep.duration;
+                const isLastStep = currentStepIndex === steps.length - 1;
 
                 if (timer > 0) {
                     const timeRemaining = stepEndTime - timer;
-                    if (timeRemaining <= 3 && timeRemaining >= 1) playBeep('tick');
+                    if (!isLastStep && timeRemaining <= 3 && timeRemaining >= 1) {
+                        playBeep('tick');
+                    }
                 }
-                if (timer > 0 && timer === stepEndTime) playBeep('start');
+                if (timer > 0 && timer === stepEndTime) {
+                    if (!isLastStep) playBeep('start');
+                }
 
                 if (timer >= stepEndTime) {
-                    if (currentStepIndex < steps.length - 1) setCurrentStepIndex(prev => prev + 1);
-                    else setIsBrewing(false);
+                    if (currentStepIndex < steps.length - 1) {
+                        setCurrentStepIndex(prev => prev + 1);
+                    } else {
+                        setIsBrewing(false);
+                        playSuccessSound(); 
+                    }
                 }
             }, [timer, isBrewing, currentStepIndex, steps]);
 
-            // Handlers
             const handleStart = () => {
-                if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-                else if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
+                initAudio();
                 setCountdown(3);
             };
             const handleReset = () => { setIsBrewing(false); setTimer(0); setCurrentStepIndex(0); setCountdown(null); };
@@ -437,200 +538,248 @@
                 setIsEditingBeans(false);
             };
 
+            // Helper Component for Target Weight (Shared)
+            // UPDATED: Reverted to Standard Centering (Block Center)
+            const TargetWeightDisplay = ({ value }) => (
+                <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                    <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">
+                        Target Weight
+                    </p>
+                    <div className="flex items-baseline justify-center gap-2">
+                        <span className="text-6xl font-light text-white text-glow">{value}</span>
+                        <span className="text-2xl text-white/40 font-light">g</span>
+                    </div>
+                </div>
+            );
 
             // --- UI RENDERERS ---
 
             // 1. Countdown View
             if (countdown !== null) {
                 return (
+                    // Using v2.20 Container Style: h-screen without bg-black override
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
                         <BackgroundEffect color={countdown === 0 ? "bg-amber-500" : "bg-cyan-500"} />
-                        <div className="relative z-10 flex flex-col items-center justify-center h-full w-full">
-                            {/* 修正：向上平移 -translate-y-12 以調整視覺置中 */}
-                            <div className="relative flex items-center justify-center transform -translate-y-12">
-                                {/* 修正：確保數字在寬度和字距上都正確置中 */}
-                                <h1 className={`text-[12rem] font-extralight leading-none transition-all duration-300 transform scale-100 tabular-nums text-center w-full ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>
-                                    {countdown === 0 ? "GO" : countdown}
-                                </h1>
-                                <p className="absolute top-full mt-4 text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse whitespace-nowrap">
+                        
+                        {/* UNIFIED LAYOUT: Visual Center */}
+                        {/* Centered at top 35% of screen */}
+                        <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
+                             <h1 className={`text-[12rem] font-extralight leading-none transition-all duration-300 tabular-nums text-center w-full ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>
+                                {countdown === 0 ? "GO" : countdown}
+                            </h1>
+                        </div>
+
+                        {/* UNIFIED LAYOUT: Data Cluster */}
+                        {/* Fixed position starting at top 47% (Reverted from 49%) */}
+                        <div className="absolute top-[47%] left-0 right-0 flex flex-col items-center">
+                            
+                            {/* Status Text (Spacing buffer mb-9) */}
+                             <div className="mb-9 h-7 flex items-center justify-center">
+                                <p className="text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse whitespace-nowrap text-center">
                                     {countdown === 0 ? "START BREW" : "READY"}
                                 </p>
+                            </div>
+
+                            {/* Target Weight */}
+                            <div>
+                                <TargetWeightDisplay value={Math.round(steps[0].cumulative)} />
                             </div>
                         </div>
                     </div>
                 );
             }
 
-            // 2. Setup View
+            // 2. Setup View - UPDATED SCROLL BEHAVIOR (v2.54)
             if (!isBrewing && timer === 0) {
                 return (
                     <div className="h-screen w-full flex flex-col relative overflow-hidden">
                         <BackgroundEffect color="bg-amber-800" />
                         
-                        {/* Header */}
-                        <header className="pt-14 pb-4 px-6 flex justify-between items-center z-10">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10">
-                                    <Coffee size={20} className="text-amber-400" />
-                                </div>
-                                <div>
-                                    {/* Removed Version Tag from Header */}
-                                    <h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
-                                    <p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p>
-                                </div>
-                            </div>
-                            <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center">
-                                {soundEnabled ? <Volume2 size={18} className="text-white/80"/> : <VolumeX size={18} className="text-white/40"/>}
-                            </button>
-                        </header>
-
-                        <main className="flex-1 overflow-y-auto px-6 pb-32 z-10 space-y-6 pt-4">
+                        {/* SCROLLABLE WRAPPER (Header + Main) */}
+                        <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             
-                            {/* Coffee Beans & Ratio Section (Merged) */}
-                            <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden group">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50"></div>
-                                <h2 className="text-sm uppercase tracking-widest text-amber-500/80 mb-6 font-medium">Coffee Beans</h2>
-                                
-                                <div className="relative h-32 flex items-center justify-center">
-                                    {isEditingBeans ? (
-                                        <div className="flex items-baseline">
-                                            <input
-                                                ref={beansInputRef}
-                                                type="number"
-                                                value={tempBeans}
-                                                onChange={(e) => setTempBeans(e.target.value)}
-                                                onBlur={handleBeansSubmit}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleBeansSubmit()}
-                                                autoFocus
-                                                className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div onClick={() => { setIsEditingBeans(true); setTempBeans(beans); }} className="cursor-pointer transition-transform active:scale-95">
-                                            <span className="text-8xl font-thin text-white text-glow">{beans}</span>
-                                            <span className="text-2xl text-white/40 font-light ml-2">g</span>
-                                        </div>
-                                    )}
+                            <header className="pt-14 pb-4 px-6 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    {/* APP LOGO REVERTED to v3.1 */}
+                                    <AppLogo size={42} />
+                                    <div>
+                                        <h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
+                                        <p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p>
+                                    </div>
                                 </div>
+                                <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center">
+                                    {soundEnabled ? <Volume2 size={18} className="text-white/80"/> : <VolumeX size={18} className="text-white/40"/>}
+                                </button>
+                            </header>
 
-                                <div className="mt-6 px-4">
-                                    <input 
-                                        type="range" min="10" max="40" step="1" 
-                                        value={beans} 
-                                        onChange={(e) => setBeans(Number(e.target.value))} 
-                                        className="accent-amber-500"
-                                    />
+                            <main className="px-6 pb-48 space-y-6 pt-0">
+                                
+                                {/* Setup Controls */}
+                                <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden group">
+                                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50"></div>
+                                    <h2 className="text-sm uppercase tracking-widest text-amber-500/80 mb-6 font-medium">Coffee Beans</h2>
                                     
-                                    {/* Target Water / Ratio Toggle Area - 移除 10g/40g 標示，置中顯示 TARGET */}
-                                    <div className="flex justify-center items-center text-xs text-white/30 mt-3 font-mono relative h-8">
-                                        {isEditingRatio ? (
-                                            <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-white/20">
-                                                <span className="text-white shrink-0 font-bold w-8 text-right">1:{ratio}</span>
-                                                <input 
-                                                    type="range" min="10" max="20" step="1"
-                                                    value={ratio}
-                                                    onChange={(e) => setRatio(Number(e.target.value))}
-                                                    className="w-full slider-ratio h-1"
+                                    <div className="relative h-32 flex items-center justify-center">
+                                        {isEditingBeans ? (
+                                            <div className="flex items-baseline">
+                                                <input
+                                                    ref={beansInputRef}
+                                                    type="number"
+                                                    value={tempBeans}
+                                                    onChange={(e) => setTempBeans(e.target.value)}
+                                                    onBlur={handleBeansSubmit}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleBeansSubmit()}
+                                                    autoFocus
+                                                    className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50"
                                                 />
                                             </div>
                                         ) : (
-                                            <>
-                                                <span 
-                                                    onClick={() => setIsEditingRatio(true)} 
-                                                    className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10"
-                                                >
-                                                    TARGET: {Math.round(totalWater)}ml <span className="text-white/50">(1:{ratio})</span>
-                                                </span>
-                                            </>
+                                            <div onClick={() => { setIsEditingBeans(true); setTempBeans(beans); }} className="cursor-pointer transition-transform active:scale-95">
+                                                <span className="text-8xl font-thin text-white text-glow">{beans}</span>
+                                                <span className="text-2xl text-white/40 font-light ml-2">g</span>
+                                            </div>
                                         )}
                                     </div>
-                                </div>
-                            </section>
 
-                            {/* Flavor Profile */}
-                            <section className="space-y-3">
-                                <label className="flex items-center gap-2 text-sm text-white/60 ml-2">
-                                    <Coffee size={14} /> Flavor (Phase 1)
-                                </label>
-                                <div className="grid grid-cols-3 gap-3">
-                                    {[{id: 'sweet', label: 'Sweet', sub: '少酸'}, {id: 'balanced', label: 'Balance', sub: '平衡'}, {id: 'acidic', label: 'Acidity', sub: '明亮'}].map(opt => (
-                                        <button 
-                                            key={opt.id} 
-                                            onClick={() => setFlavor(opt.id)}
-                                            className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${flavor === opt.id ? 'active' : ''}`}
-                                        >
-                                            <span className="text-sm font-medium">{opt.label}</span>
-                                            <span className="text-[10px] opacity-60 scale-90">{opt.sub}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Strength Profile */}
-                            <section className="space-y-3">
-                                <label className="flex items-center gap-2 text-sm text-white/60 ml-2">
-                                    <Timer size={14} /> Strength (Phase 2)
-                                </label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {[{id: 'standard', label: 'Standard', desc: '2 Pours'}, {id: 'strong', label: 'Strong', desc: '3 Pours'}].map(opt => (
-                                        <button 
-                                            key={opt.id} 
-                                            onClick={() => setStrength(opt.id)}
-                                            className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${strength === opt.id ? 'active' : ''}`}
-                                        >
-                                            <span className="text-sm font-medium">{opt.label}</span>
-                                            <span className="text-[10px] opacity-60 scale-90">{opt.desc}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </section>
-
-                            {/* Water Temperature Section - Collapsible Accordion */}
-                            <section className="space-y-3">
-                                <button
-                                    onClick={() => setIsTempGuideOpen(!isTempGuideOpen)}
-                                    className="flex items-center w-full text-left group"
-                                >
-                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2 group-hover:text-white/80 transition-colors">
-                                        <Thermometer size={14} />
-                                        <span>Temp Guide</span>
-                                    </div>
-                                    <div className={`ml-2 transition-transform duration-300 ${isTempGuideOpen ? 'rotate-180' : ''}`}>
-                                         <ChevronDown size={14} className="text-white/40" />
-                                    </div>
-                                </button>
-
-                                {isTempGuideOpen && (
-                                    <div className="grid grid-cols-3 gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
-                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                            <span className="text-xs text-white/40 mb-1">Light</span>
-                                            <span className="text-sm font-mono text-white/90">93°C</span>
-                                        </div>
-                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                            <span className="text-xs text-white/40 mb-1">Medium</span>
-                                            <span className="text-sm font-mono text-white/90">88°C</span>
-                                        </div>
-                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                            <span className="text-xs text-white/40 mb-1">Dark</span>
-                                            <span className="text-sm font-mono text-white/90">83°C</span>
+                                    <div className="mt-6 px-4">
+                                        <input 
+                                            type="range" min="10" max="40" step="1" 
+                                            value={beans} 
+                                            onChange={(e) => setBeans(Number(e.target.value))} 
+                                            className="accent-amber-500"
+                                        />
+                                        
+                                        <div className="flex justify-center items-center text-xs text-white/30 mt-3 font-mono relative h-8">
+                                            {isEditingRatio ? (
+                                                <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-white/20">
+                                                    <span className="text-white shrink-0 font-bold w-8 text-right">1:{ratio}</span>
+                                                    <input 
+                                                        type="range" min="10" max="20" step="1"
+                                                        value={ratio}
+                                                        onChange={(e) => setRatio(Number(e.target.value))}
+                                                        className="w-full slider-ratio h-1"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <span 
+                                                        onClick={() => setIsEditingRatio(true)} 
+                                                        className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10"
+                                                    >
+                                                        TARGET: {Math.round(totalWater)}ml <span className="text-white/50">(1:{ratio})</span>
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </section>
-                            
-                            {/* Version Info (Moved to bottom right) */}
-                            <div className="w-full flex justify-end py-4 pr-2">
-                                {/* Updated Version Style and Number */}
-                                <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v2.20</p>
-                            </div>
+                                </section>
 
-                        </main>
+                                <section className="space-y-3">
+                                    <label className="flex items-center gap-2 text-sm text-white/60 ml-2">
+                                        <Coffee size={14} /> Flavor (Phase 1)
+                                    </label>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[{id: 'sweet', label: 'Sweet'}, {id: 'balanced', label: 'Balance'}, {id: 'acidic', label: 'Acidity'}].map(opt => (
+                                            <button 
+                                                key={opt.id} 
+                                                onClick={() => setFlavor(opt.id)}
+                                                className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${flavor === opt.id ? 'active' : ''}`}
+                                            >
+                                                <span className="text-sm font-medium">{opt.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
 
-                        {/* Floating Action Button - Redesigned Style */}
-                        <div className="absolute bottom-8 left-0 right-0 flex justify-center z-20">
-                            <button 
+                                <section className="space-y-3">
+                                    <label className="flex items-center gap-2 text-sm text-white/60 ml-2">
+                                        <TimerIcon size={14} /> Strength (Phase 2)
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[{id: 'standard', label: 'Standard', desc: '2 Pours'}, {id: 'strong', label: 'Strong', desc: '3 Pours'}].map(opt => (
+                                            <button 
+                                                key={opt.id} 
+                                                onClick={() => setStrength(opt.id)}
+                                                className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${strength === opt.id ? 'active' : ''}`}
+                                            >
+                                                <span className="text-sm font-medium">{opt.label}</span>
+                                                <span className="text-[10px] opacity-60 scale-90">{opt.desc}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </section>
+
+                                <section className="space-y-3">
+                                    <button
+                                        onClick={() => setIsTempGuideOpen(!isTempGuideOpen)}
+                                        className="flex items-center w-full text-left group"
+                                    >
+                                        <div className="flex items-center gap-2 text-sm text-white/60 ml-2 group-hover:text-white/80 transition-colors">
+                                            <Thermometer size={14} />
+                                            <span>Temp Guide</span>
+                                        </div>
+                                        <div className={`ml-2 transition-transform duration-300 ${isTempGuideOpen ? 'rotate-180' : ''}`}>
+                                             <ChevronDown size={14} className="text-white/40" />
+                                        </div>
+                                    </button>
+
+                                    {isTempGuideOpen && (
+                                        <div className="grid grid-cols-3 gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                                            <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                                <span className="text-xs text-white/40 mb-1">Light</span>
+                                                <span className="text-sm font-mono text-white/90">93°C</span>
+                                            </div>
+                                            <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                                <span className="text-xs text-white/40 mb-1">Medium</span>
+                                                <span className="text-sm font-mono text-white/90">88°C</span>
+                                            </div>
+                                            <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                                <span className="text-xs text-white/40 mb-1">Dark</span>
+                                                <span className="text-sm font-mono text-white/90">83°C</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </section>
+
+                                <section className="glass-panel rounded-[2rem] p-6">
+                                    <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                                        <h3 className="flex items-center gap-2 text-sm uppercase tracking-widest text-white/40 font-medium">
+                                            <ClipboardList size={14} /> Brew Plan
+                                        </h3>
+                                        <div className="flex gap-4 text-[10px] uppercase tracking-widest text-white/30">
+                                            <span className="w-8 text-right">Time</span>
+                                            <span className="w-8 text-right">Water</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {steps.map((step, index) => (
+                                            <div key={index} className="flex justify-between items-center text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0 px-1">
+                                                <div className="flex items-center flex-1">
+                                                    <span className="text-amber-500/80 font-mono w-8">{index + 1}</span>
+                                                    <span className="text-white/80">{step.text}</span>
+                                                </div>
+                                                <div className="flex items-center gap-4 font-mono">
+                                                    <span className="text-white/40 text-xs w-8 text-right">{step.duration}s</span>
+                                                    <span className="text-white font-medium w-8 text-right">{Math.round(step.weight)}g</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                                
+                                <div className="w-full flex justify-end py-4 pr-2">
+                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.6</p>
+                                </div>
+
+                            </main>
+                        </div>
+
+                        {/* BOTTOM BUTTON: With Gradient Cover */}
+                        <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black/80 via-black/80 via-40% to-transparent pt-32 pb-12 pointer-events-none">
+                             <button 
                                 onClick={handleStart}
-                                className="px-10 py-5 bg-amber-900/20 text-amber-500 rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.15)] border border-amber-500/50 backdrop-blur-xl active:scale-95 transition-all duration-200 hover:bg-amber-900/40 hover:text-amber-400"
+                                className="pointer-events-auto px-10 py-5 bg-amber-900/20 text-amber-500 rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.15)] border border-amber-500/50 backdrop-blur-xl active:scale-95 transition-all duration-200 hover:bg-amber-900/40 hover:text-amber-400"
                             >
                                 <Play size={24} className="fill-amber-500" />
                                 <span className="text-lg font-bold tracking-wide">START BREW</span>
@@ -644,33 +793,30 @@
             const isFinished = !isBrewing && timer > 0;
 
             return (
-                // 為了確保 header 按鈕可點擊，我們將整個視窗設為 flex column
                 <div className="h-screen w-full flex flex-col relative overflow-hidden"> 
                     <BackgroundEffect color={isFinished ? "bg-green-600" : "bg-amber-900"} />
                     
-                    {/* Top Bar - 提升 z-index 並確保其高度不被 main 內容覆蓋 */}
-                    <header className="pt-14 pb-2 px-6 flex justify-between items-center z-20 relative"> 
+                    <header className="absolute top-0 left-0 right-0 pt-14 pb-2 px-6 flex justify-between items-center z-20"> 
                         <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white z-30">
                             {isFinished ? <X size={20}/> : <RotateCcw size={18} />}
                         </button>
                         
-                        {/* ABSOLUTE CENTERED TIMER - 修正對齊問題 */}
-                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 pt-12 font-mono text-xl tracking-widest text-white/80 tabular-nums">
-                            {formatTime(timer)}
-                        </div>
+                        {isFinished && (
+                            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 pt-12 font-mono text-xl tracking-widest text-white/80 tabular-nums">
+                                {formatTime(timer)}
+                            </div>
+                        )}
 
                         <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 z-30">
                             {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                         </button>
                     </header>
 
-                    {/* Main Content Area - 從 justify-center 改為 justify-start 並增加 padding-top 讓內容靠上 */}
-                    <main className="flex-1 z-10 flex flex-col items-center justify-start pt-12 relative min-h-0"> 
+                    <main className="h-full w-full flex flex-col items-center justify-center z-10 relative"> 
                         
                         {isFinished ? (
                             // Finished State
-                            // 修改：justify-center -> justify-start, 加入 pt-12, 移除 animate-float-slow
-                            <div className="flex-1 flex flex-col items-center justify-start pt-12 p-8">
+                            <div className="flex-1 flex flex-col items-center justify-start pt-32 p-8 w-full">
                                 <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center shadow-[0_0_50px_rgba(52,211,153,0.4)] mb-4">
                                     <Coffee size={40} className="text-white" />
                                 </div>
@@ -687,91 +833,55 @@
                                 </button>
                             </div>
                         ) : (
-                            // Brewing State
+                            // Brewing State - UNIFIED ABSOLUTE LAYOUT (v2.52)
+                            // Following v2.20 container structure but v2.47 content
                             <>
-                                {/* Main Display */}
-                                <div className="flex flex-col items-center justify-center w-full">
-                                    <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-4 animate-pulse">
-                                        Target Weight
-                                    </p>
-                                    
-                                    {/* 修正: 使用 Flexbox 確保整組數字+單位是視覺置中的 */}
-                                    <div className="flex items-baseline justify-center gap-1 transition-all">
-                                        {/* 修改: 字體改為響應式 text-7xl (手機) md:text-9xl (大螢幕) */}
-                                        <h1 className="text-7xl md:text-9xl font-thin leading-none text-white text-glow tabular-nums tracking-tighter">
-                                            {Math.round(currentStep.cumulative)}
-                                        </h1>
-                                        <span className="text-xl md:text-2xl text-white/30 font-light">g</span>
-                                    </div>
-                                    
-                                    {/* Next Target Indicator */}
-                                    {currentStepIndex < steps.length - 1 && (
-                                        <div className="mt-4 mb-2 flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/5 backdrop-blur-sm">
-                                            <span className="text-[10px] text-white/40 uppercase tracking-widest">Next</span>
-                                            <span className="text-sm text-white/90 font-mono font-bold">{nextCumulativeWater}g</span>
+                                {/* 1. Main Visual (Timer) - Fixed Center Position */}
+                                {/* Centered at top 35% of screen */}
+                                <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
+                                     <SegmentedTimer 
+                                        steps={steps}
+                                        currentStepIndex={currentStepIndex}
+                                        remainingTimeInStep={remainingTimeInStep} 
+                                        currentStepDuration={currentStep.duration}
+                                        size={window.innerWidth < 380 ? 240 : 280}
+                                    >
+                                        <div className="flex flex-col items-center">
+                                            <h1 className="text-9xl font-thin tabular-nums text-white text-glow leading-none tracking-tighter">
+                                                {remainingTimeInStep}
+                                            </h1>
+                                            <p className="text-white/40 text-xs font-mono tracking-[0.5em] mt-2">SECONDS</p>
                                         </div>
-                                    )}
-                                    
-                                    {/* Progress Bar */}
-                                    <div className="w-64 h-1.5 bg-white/10 rounded-full mt-6 overflow-hidden relative shrink-0">
-                                        <div 
-                                            className="absolute top-0 left-0 h-full bg-amber-500 shadow-[0_0_15px_#f59e0b] transition-all duration-1000 ease-linear"
-                                            style={{ width: `${progressPercent}%` }}
-                                        />
-                                    </div>
-                                    <div className="mt-4 flex items-center gap-2 text-white/40 font-mono text-xs">
-                                        <span>Step Time</span>
-                                        <span className="text-amber-400 font-bold">{remainingTimeInStep}s</span>
-                                        <span>/ {currentStep.duration}s</span>
-                                    </div>
+                                    </SegmentedTimer>
                                 </div>
 
-                                {/* Step Deck (Bottom) - Modified for flex layout and auto-scroll */}
-                                {/* 修改：flex-1 min-h-0 (解決 crop 問題), mt-4 (縮小上方間距) */}
-                                <div className="mt-4 w-full flex-1 min-h-0 glass-panel rounded-t-[2.5rem] border-b-0 p-6 overflow-hidden relative flex flex-col"> 
-                                    <div className="absolute top-3 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white/10 rounded-full shrink-0"></div>
-                                    <h3 className="text-xs text-white/30 uppercase tracking-widest mb-4 ml-2 shrink-0">Timeline</h3>
+                                {/* 2. Data Cluster - Fixed Start Position */}
+                                {/* Fixed position starting at top 47% (Reverted from 49%) */}
+                                <div className="absolute top-[47%] left-0 right-0 flex flex-col items-center">
                                     
-                                    <div className="space-y-3 overflow-y-auto pb-20 no-scrollbar mask-gradient flex-1">
-                                        {steps.map((step, idx) => (
-                                            <div 
-                                                key={idx}
-                                                // Added ref for auto-scrolling
-                                                ref={idx === currentStepIndex ? activeStepRef : null}
-                                                className={`flex items-center justify-between p-4 rounded-2xl transition-all duration-500 ${
-                                                    idx === currentStepIndex 
-                                                        ? 'bg-white/10 border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.1)]' // Removed translate-x-2
-                                                        : idx < currentStepIndex 
-                                                            ? 'opacity-30 grayscale' 
-                                                            : 'opacity-50'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border shrink-0 ${
-                                                        idx === currentStepIndex ? 'border-amber-500 text-amber-500 bg-amber-500/10' : 'border-white/20 text-white/40'
-                                                    }`}>
-                                                        {idx + 1}
-                                                    </div>
-                                                    <div>
-                                                        <div className={`text-sm font-medium ${idx === currentStepIndex ? 'text-white' : 'text-white/60'}`}>
-                                                            {step.text.split('(')[0]}
-                                                        </div>
-                                                        <div className="text-[10px] text-white/30 uppercase tracking-wider">
-                                                            {step.text.split('(')[1]?.replace(')', '') || 'Pour'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <div className="text-lg font-light text-white tabular-nums">
-                                                        {Math.round(step.cumulative)}<span className="text-xs text-white/30 ml-0.5">g</span>
-                                                    </div>
-                                                    <div className="text-[10px] text-white/30">
-                                                        +{Math.round(step.weight)}g
-                                                    </div>
+                                    {/* Invisible Spacer (Matches 'READY' height) - mb-9 */}
+                                    <div className="mb-9 h-7 w-1"></div>
+
+                                    {/* Target Weight Display */}
+                                    <div className="flex flex-col items-center justify-center z-30">
+                                        <TargetWeightDisplay value={Math.round(currentStep.cumulative)} />
+                                        
+                                        {/* Next Target Hint */}
+                                        {nextCumulativeWater && (
+                                            <div className="mt-4 flex justify-center animate-in fade-in slide-in-from-bottom-2 absolute top-full pt-4">
+                                                <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm">
+                                                    <span className="text-white/40 text-[10px] uppercase tracking-wider mr-2">Next</span>
+                                                    <span className="text-white/80 text-sm font-mono">{nextCumulativeWater}g</span>
                                                 </div>
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
+                                    
+                                </div>
+
+                                {/* Step Counter (Footer) - Kept independent */}
+                                <div className="absolute bottom-10 left-0 right-0 flex justify-center text-white/30 font-mono text-xs tracking-widest uppercase">
+                                    STEP {currentStepIndex + 1} / {steps.length}
                                 </div>
                             </>
                         )}
@@ -780,14 +890,13 @@
             );
         };
 
-        // --- Background Component for the Aurora Effect ---
+        // --- Background Component ---
         const BackgroundEffect = ({ color }) => {
             return (
                 <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    <div className={`absolute top-[-20%] left-[-20%] w-[90%] h-[60%] ${color} opacity-20 blur-[100px] rounded-full animate-blob mix-blend-screen`}></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[60%] bg-blue-900 opacity-20 blur-[120px] rounded-full animate-blob mix-blend-screen" style={{animationDelay: '2s'}}></div>
-                    <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] bg-purple-900 opacity-10 blur-[80px] rounded-full animate-blob" style={{animationDelay: '4s'}}></div>
-                    {/* Noise Texture */}
+                    <div className={`absolute top-[-20%] left-[-20%] w-[90%] h-[60%] ${color} opacity-[0.30] blur-[100px] rounded-full animate-blob mix-blend-screen`}></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[60%] bg-blue-900 opacity-[0.30] blur-[120px] rounded-full animate-blob mix-blend-screen" style={{animationDelay: '2s'}}></div>
+                    <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] bg-purple-900 opacity-[0.20] blur-[80px] rounded-full animate-blob" style={{animationDelay: '4s'}}></div>
                     <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/rect%3E")'}}></div>
                 </div>
             );
