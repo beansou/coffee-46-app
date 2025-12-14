@@ -12,16 +12,15 @@
     <meta name="theme-color" content="#000000">
 
     <!-- 
-       UPDATED APP ICON (v3.6): 
+       APP ICON (v3.6): 
        Linked to local file 'my_coffee_logo.png' hosted on your GitHub.
-       This will work when deployed to the same directory as this HTML file.
     -->
     <link rel="apple-touch-icon" href="my_coffee_logo.png">
     <link rel="icon" type="image/png" href="my_coffee_logo.png">
 
     <!-- Dependencies -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -314,20 +313,32 @@
         // --- Core Logic ---
         const GO_SCREEN_HOLD_DURATION_MS = 1000;
 
+        // Helper Component for Target Weight (Moved outside App for better performance)
+        const TargetWeightDisplay = ({ value }) => (
+            <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">
+                    Target Weight
+                </p>
+                <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-6xl font-light text-white text-glow">{value}</span>
+                    <span className="text-2xl text-white/40 font-light">g</span>
+                </div>
+            </div>
+        );
+
         const App = () => {
             // State
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
-            const [flavor, setFlavor] = useState('sweet');
-            const [strength, setStrength] = useState('strong');
+            const [flavor, setFlavor] = useState('sweet'); // sweet, balanced, acidic
+            const [strength, setStrength] = useState('strong'); // standard, strong
             const [isBrewing, setIsBrewing] = useState(false);
             const [timer, setTimer] = useState(0);
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
             
-            // UI State
-            const [isTempGuideOpen, setIsTempGuideOpen] = useState(false);
+            // UI State - (isTempGuideOpen removed in v3.7)
             
             // Editing State
             const [isEditingBeans, setIsEditingBeans] = useState(false);
@@ -538,49 +549,24 @@
                 setIsEditingBeans(false);
             };
 
-            // Helper Component for Target Weight (Shared)
-            // UPDATED: Reverted to Standard Centering (Block Center)
-            const TargetWeightDisplay = ({ value }) => (
-                <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">
-                        Target Weight
-                    </p>
-                    <div className="flex items-baseline justify-center gap-2">
-                        <span className="text-6xl font-light text-white text-glow">{value}</span>
-                        <span className="text-2xl text-white/40 font-light">g</span>
-                    </div>
-                </div>
-            );
-
             // --- UI RENDERERS ---
 
             // 1. Countdown View
             if (countdown !== null) {
                 return (
-                    // Using v2.20 Container Style: h-screen without bg-black override
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
                         <BackgroundEffect color={countdown === 0 ? "bg-amber-500" : "bg-cyan-500"} />
-                        
-                        {/* UNIFIED LAYOUT: Visual Center */}
-                        {/* Centered at top 35% of screen */}
                         <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
                              <h1 className={`text-[12rem] font-extralight leading-none transition-all duration-300 tabular-nums text-center w-full ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>
                                 {countdown === 0 ? "GO" : countdown}
                             </h1>
                         </div>
-
-                        {/* UNIFIED LAYOUT: Data Cluster */}
-                        {/* Fixed position starting at top 47% (Reverted from 49%) */}
                         <div className="absolute top-[47%] left-0 right-0 flex flex-col items-center">
-                            
-                            {/* Status Text (Spacing buffer mb-9) */}
                              <div className="mb-9 h-7 flex items-center justify-center">
                                 <p className="text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse whitespace-nowrap text-center">
                                     {countdown === 0 ? "START BREW" : "READY"}
                                 </p>
                             </div>
-
-                            {/* Target Weight */}
                             <div>
                                 <TargetWeightDisplay value={Math.round(steps[0].cumulative)} />
                             </div>
@@ -709,38 +695,7 @@
                                     </div>
                                 </section>
 
-                                <section className="space-y-3">
-                                    <button
-                                        onClick={() => setIsTempGuideOpen(!isTempGuideOpen)}
-                                        className="flex items-center w-full text-left group"
-                                    >
-                                        <div className="flex items-center gap-2 text-sm text-white/60 ml-2 group-hover:text-white/80 transition-colors">
-                                            <Thermometer size={14} />
-                                            <span>Temp Guide</span>
-                                        </div>
-                                        <div className={`ml-2 transition-transform duration-300 ${isTempGuideOpen ? 'rotate-180' : ''}`}>
-                                             <ChevronDown size={14} className="text-white/40" />
-                                        </div>
-                                    </button>
-
-                                    {isTempGuideOpen && (
-                                        <div className="grid grid-cols-3 gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
-                                            <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                                <span className="text-xs text-white/40 mb-1">Light</span>
-                                                <span className="text-sm font-mono text-white/90">93°C</span>
-                                            </div>
-                                            <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                                <span className="text-xs text-white/40 mb-1">Medium</span>
-                                                <span className="text-sm font-mono text-white/90">88°C</span>
-                                            </div>
-                                            <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                                <span className="text-xs text-white/40 mb-1">Dark</span>
-                                                <span className="text-sm font-mono text-white/90">83°C</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </section>
-
+                                {/* Brew Plan Section (Moved Up in v3.7) */}
                                 <section className="glass-panel rounded-[2rem] p-6">
                                     <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
                                         <h3 className="flex items-center gap-2 text-sm uppercase tracking-widest text-white/40 font-medium">
@@ -767,9 +722,32 @@
                                         ))}
                                     </div>
                                 </section>
+
+                                {/* Temp Guide Section (Moved Down & Always Visible in v3.7) */}
+                                <section className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2">
+                                        <Thermometer size={14} />
+                                        <span>Temp Guide</span>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-xs text-white/40 mb-1">Light</span>
+                                            <span className="text-sm font-mono text-white/90">93°C</span>
+                                        </div>
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-xs text-white/40 mb-1">Medium</span>
+                                            <span className="text-sm font-mono text-white/90">88°C</span>
+                                        </div>
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-xs text-white/40 mb-1">Dark</span>
+                                            <span className="text-sm font-mono text-white/90">83°C</span>
+                                        </div>
+                                    </div>
+                                </section>
                                 
                                 <div className="w-full flex justify-end py-4 pr-2">
-                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.6</p>
+                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.7</p>
                                 </div>
 
                             </main>
