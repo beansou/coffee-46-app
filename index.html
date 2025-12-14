@@ -747,7 +747,7 @@
                                 </section>
                                 
                                 <div className="w-full flex justify-end py-4 pr-2">
-                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.7</p>
+                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.8</p>
                                 </div>
 
                             </main>
@@ -844,12 +844,15 @@
                                     <div className="flex flex-col items-center justify-center z-30">
                                         <TargetWeightDisplay value={Math.round(currentStep.cumulative)} />
                                         
-                                        {/* Next Target Hint */}
+                                        {/* Next Target Hint - MODIFIED for spacing consistency (v3.8) */}
                                         {nextCumulativeWater && (
                                             <div className="mt-4 flex justify-center animate-in fade-in slide-in-from-bottom-2 absolute top-full pt-4">
-                                                <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm">
+                                                <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm flex items-center">
                                                     <span className="text-white/40 text-[10px] uppercase tracking-wider mr-2">Next</span>
-                                                    <span className="text-white/80 text-sm font-mono">{nextCumulativeWater}g</span>
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-white/80 text-sm font-mono">{nextCumulativeWater}</span>
+                                                        <span className="text-white/40 text-[10px] font-mono">g</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
