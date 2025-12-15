@@ -38,20 +38,12 @@
             touch-action: manipulation;
         }
 
-        /* Ambient Animation */
-        @keyframes float-slow {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-20px, 10px) scale(1.1); }
-        }
+        /* Ambient Animation - REMOVED for Lite Mode to save battery */
         @keyframes pulse-glow {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 0.6; }
         }
         
-        .animate-blob {
-            animation: float-slow 10s infinite ease-in-out;
-        }
-
         /* Hide Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -146,21 +138,29 @@
             </svg>
         );
 
-        // --- APP LOGO (Maintained v3.1 Style) ---
+        // --- APP LOGO (Refactored for v3.12) ---
         const AppLogo = ({ size = 42 }) => (
             <div 
-                className="rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center border border-white/10 relative overflow-hidden shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                style={{ width: size, height: size }}
+                className="rounded-full flex items-center justify-center border border-white/10 relative overflow-hidden"
+                style={{ 
+                    width: size, 
+                    height: size,
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+                    boxShadow: '0 0 15px rgba(245, 158, 11, 0.15)' 
+                }}
             >
-                <svg width={size*0.6} height={size*0.6} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
-                     {/* Stylized V60 Dripper */}
+                <svg width={size*0.6} height={size*0.6} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 relative z-10">
                     <path d="M4 6h16l-8 16L4 6z" strokeWidth="1.5" />
                     <path d="M4 6h16" strokeWidth="1.5" />
-                    {/* Glowing Drop */}
                     <circle cx="12" cy="14" r="2" fill="currentColor" className="animate-pulse" />
                 </svg>
-                {/* Glow Effect */}
-                <div className="absolute inset-0 bg-amber-500/10 blur-md rounded-full"></div>
+                
+                <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)'
+                    }}
+                ></div>
             </div>
         );
 
@@ -313,7 +313,9 @@
         // --- Core Logic ---
         const GO_SCREEN_HOLD_DURATION_MS = 1000;
 
-        // Helper Component for Target Weight (Moved outside App for better performance)
+        // --- Helper Components (Defined before App to avoid ordering issues) ---
+
+        // Helper Component for Target Weight
         const TargetWeightDisplay = ({ value }) => (
             <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">
@@ -326,6 +328,46 @@
             </div>
         );
 
+        // --- Background Component (Moved before App) ---
+        // Uses CSS Radial Gradients to completely eliminate banding/grid artifacts on iOS
+        const BackgroundEffect = ({ color }) => {
+            // Map Tailwind classes to RGBA values for gradients
+            const getColorValue = (c) => {
+                if (!c) return 'rgba(245, 158, 11, 0.2)'; // Safety fallback
+                if (c.includes('amber-500')) return 'rgba(245, 158, 11, 0.4)'; // Amber 500 (GO)
+                if (c.includes('cyan-500')) return 'rgba(6, 182, 212, 0.4)'; // Cyan 500 (Countdown)
+                if (c.includes('amber-800')) return 'rgba(146, 64, 14, 0.3)'; // Amber 800 (Setup)
+                if (c.includes('orange-600')) return 'rgba(234, 88, 12, 0.3)'; // Orange 600 (Brewing)
+                if (c.includes('green-600')) return 'rgba(22, 163, 74, 0.3)'; // Green 600 (Finished)
+                return 'rgba(245, 158, 11, 0.2)'; // Default
+            };
+
+            const mainColor = getColorValue(color);
+
+            return (
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-black">
+                     {/* Main Gradient - Top Left (Dynamic Color) */}
+                    <div 
+                        className="absolute inset-0 transition-all duration-1000 ease-in-out"
+                        style={{
+                            background: `radial-gradient(circle at 20% 20%, ${mainColor}, transparent 60%)`
+                        }}
+                    ></div>
+
+                    {/* Secondary Gradient - Bottom Right (Static Blue Tint) */}
+                    <div 
+                        className="absolute inset-0"
+                        style={{
+                            background: `radial-gradient(circle at 80% 80%, rgba(30, 58, 138, 0.2), transparent 50%)`
+                        }}
+                    ></div>
+
+                     {/* Noise Texture - Subtle Grain */}
+                    <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay" style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")"}}></div>
+                </div>
+            );
+        };
+
         const App = () => {
             // State
             const [beans, setBeans] = useState(20);
@@ -337,8 +379,6 @@
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
-            
-            // UI State - (isTempGuideOpen removed in v3.7)
             
             // Editing State
             const [isEditingBeans, setIsEditingBeans] = useState(false);
@@ -575,7 +615,7 @@
                 );
             }
 
-            // 2. Setup View - UPDATED SCROLL BEHAVIOR (v2.54)
+            // 2. Setup View
             if (!isBrewing && timer === 0) {
                 return (
                     <div className="h-screen w-full flex flex-col relative overflow-hidden">
@@ -586,7 +626,6 @@
                             
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                    {/* APP LOGO REVERTED to v3.1 */}
                                     <AppLogo size={42} />
                                     <div>
                                         <h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
@@ -695,7 +734,6 @@
                                     </div>
                                 </section>
 
-                                {/* Brew Plan Section (Moved Up in v3.7) */}
                                 <section className="glass-panel rounded-[2rem] p-6">
                                     <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
                                         <h3 className="flex items-center gap-2 text-sm uppercase tracking-widest text-white/40 font-medium">
@@ -723,7 +761,6 @@
                                     </div>
                                 </section>
 
-                                {/* Temp Guide Section (Moved Down & Always Visible in v3.7) */}
                                 <section className="space-y-3">
                                     <div className="flex items-center gap-2 text-sm text-white/60 ml-2">
                                         <Thermometer size={14} />
@@ -747,7 +784,7 @@
                                 </section>
                                 
                                 <div className="w-full flex justify-end py-4 pr-2">
-                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.8</p>
+                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.13</p>
                                 </div>
 
                             </main>
@@ -772,7 +809,7 @@
 
             return (
                 <div className="h-screen w-full flex flex-col relative overflow-hidden"> 
-                    <BackgroundEffect color={isFinished ? "bg-green-600" : "bg-amber-900"} />
+                    <BackgroundEffect color={isFinished ? "bg-green-600" : "bg-orange-600"} />
                     
                     <header className="absolute top-0 left-0 right-0 pt-14 pb-2 px-6 flex justify-between items-center z-20"> 
                         <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white z-30">
@@ -867,18 +904,6 @@
                             </>
                         )}
                     </main>
-                </div>
-            );
-        };
-
-        // --- Background Component ---
-        const BackgroundEffect = ({ color }) => {
-            return (
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                    <div className={`absolute top-[-20%] left-[-20%] w-[90%] h-[60%] ${color} opacity-[0.30] blur-[100px] rounded-full animate-blob mix-blend-screen`}></div>
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[80%] h-[60%] bg-blue-900 opacity-[0.30] blur-[120px] rounded-full animate-blob mix-blend-screen" style={{animationDelay: '2s'}}></div>
-                    <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] bg-purple-900 opacity-[0.20] blur-[80px] rounded-full animate-blob" style={{animationDelay: '4s'}}></div>
-                    <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/rect%3E")'}}></div>
                 </div>
             );
         };
