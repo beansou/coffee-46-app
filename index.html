@@ -11,10 +11,6 @@
     <meta name="apple-mobile-web-app-title" content="4:6 Brew">
     <meta name="theme-color" content="#000000">
 
-    <!-- 
-       APP ICON (v3.6): 
-       Linked to local file 'my_coffee_logo.png' hosted on your GitHub.
-    -->
     <link rel="apple-touch-icon" href="my_coffee_logo.png">
     <link rel="icon" type="image/png" href="my_coffee_logo.png">
 
@@ -24,9 +20,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- CSS (Strictly following v2.20) -->
     <style>
-        /* iOS 26 Base Styles */
         body { 
             background-color: #000;
             color: #fff;
@@ -38,17 +32,14 @@
             touch-action: manipulation;
         }
 
-        /* Ambient Animation - REMOVED for Lite Mode to save battery */
         @keyframes pulse-glow {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 0.6; }
         }
         
-        /* Hide Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* Custom Range Slider */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -73,17 +64,12 @@
             border-radius: 2px;
         }
 
-        /* Custom Range Slider for Ratio */
         input[type=range].slider-ratio::-webkit-slider-thumb {
             background: #ffffff; 
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
             border: 2px solid rgba(255, 255, 255, 0.8);
         }
-        input[type=range].slider-ratio::-webkit-slider-runnable-track {
-            background: rgba(255, 255, 255, 0.2);
-        }
         
-        /* Glass Utilities */
         .glass-panel {
             background: rgba(25, 25, 25, 0.6);
             backdrop-filter: blur(24px);
@@ -97,21 +83,15 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .glass-button:active {
-            transform: scale(0.96);
-            background: rgba(255, 255, 255, 0.1);
-        }
+        .glass-button:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
         .glass-button.active {
-            background: rgba(245, 158, 11, 0.2); /* Amber tint */
+            background: rgba(245, 158, 11, 0.2); 
             border-color: rgba(245, 158, 11, 0.5);
             color: #fbbf24;
             box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
         }
 
-        /* Neon Text */
-        .text-glow {
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
-        }
+        .text-glow { text-shadow: 0 0 20px rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
@@ -120,47 +100,19 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
         
-        // --- Internal Icon Components ---
+        // --- 基礎圖示元件 ---
         const IconBase = ({ size = 24, className = "", children, viewBox="0 0 24 24" }) => (
-            <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width={size} 
-                height={size} 
-                viewBox={viewBox} 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className={className}
-            >
-                {children}
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox={viewBox} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
         );
 
-        // --- APP LOGO (Refactored for v3.12) ---
         const AppLogo = ({ size = 42 }) => (
-            <div 
-                className="rounded-full flex items-center justify-center border border-white/10 relative overflow-hidden"
-                style={{ 
-                    width: size, 
-                    height: size,
-                    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
-                    boxShadow: '0 0 15px rgba(245, 158, 11, 0.15)' 
-                }}
-            >
+            <div className="rounded-full flex items-center justify-center border border-white/10 relative overflow-hidden" style={{ width: size, height: size, backgroundColor: 'rgba(255, 255, 255, 0.05)', boxShadow: '0 0 15px rgba(245, 158, 11, 0.15)' }}>
                 <svg width={size*0.6} height={size*0.6} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 relative z-10">
                     <path d="M4 6h16l-8 16L4 6z" strokeWidth="1.5" />
                     <path d="M4 6h16" strokeWidth="1.5" />
                     <circle cx="12" cy="14" r="2" fill="currentColor" className="animate-pulse" />
                 </svg>
-                
-                <div 
-                    className="absolute inset-0 z-0"
-                    style={{
-                        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)'
-                    }}
-                ></div>
+                <div className="absolute inset-0 z-0" style={{ background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)' }}></div>
             </div>
         );
 
@@ -187,23 +139,11 @@
                 <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" />
             </IconBase>
         );
-        
-        const ChevronDown = (props) => (
-            <IconBase {...props}>
-                <polyline points="6 9 12 15 18 9" />
-            </IconBase>
-        );
 
-        const Play = (props) => (
-            <IconBase {...props}>
-                <polygon points="5 3 19 12 5 21 5 3" />
-            </IconBase>
-        );
-
-        const RotateCcw = (props) => (
-            <IconBase {...props}>
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
+        const ClipboardList = (props) => (
+             <IconBase {...props}>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
             </IconBase>
         );
 
@@ -222,23 +162,21 @@
                 <line x1="17" x2="23" y1="9" y2="15" />
             </IconBase>
         );
-        
-        const X = (props) => (
-            <IconBase {...props}>
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-            </IconBase>
+
+        const TargetWeightDisplay = ({ value }) => (
+            <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">Target Weight</p>
+                <div className="flex items-baseline justify-center gap-2">
+                    <span className="text-6xl font-light text-white text-glow">{value}</span>
+                    <span className="text-2xl text-white/40 font-light">g</span>
+                </div>
+            </div>
         );
 
-        const ClipboardList = (props) => (
-             <IconBase {...props}>
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-            </IconBase>
-        );
-
-        // --- "Flow" Segmented Timer ---
-        const SegmentedTimer = ({ steps, currentStepIndex, remainingTimeInStep, currentStepDuration, size = 280, children }) => {
+        // --- 分段計時圓圈元件 ---
+        const SegmentedTimer = ({ steps, currentStepIndex, remainingTimeInStep, currentStepDuration, size = 280, children, isFinished }) => {
+            if (isFinished) return <div style={{ width: size, height: size }} className="flex items-center justify-center">{children}</div>;
+            
             const strokeWidth = 10;
             const radius = (size - strokeWidth) / 2;
             const circumference = radius * 2 * Math.PI;
@@ -254,146 +192,68 @@
                             const isActive = index === currentStepIndex;
                             const isPast = index < currentStepIndex;
                             const isFuture = index > currentStepIndex;
-                            
-                            // Visual Logic:
-                            let progress = 0;
-                            if (isActive) {
-                                progress = 1 - Math.max(0, Math.min(1, remainingTimeInStep / currentStepDuration));
-                            } else if (isPast) {
-                                progress = 1;
-                            }
-                            
+                            let progress = isActive ? 1 - Math.max(0, Math.min(1, remainingTimeInStep / currentStepDuration)) : (isPast ? 1 : 0);
                             const dashArray = `${segmentLength} ${circumference - segmentLength}`;
-                            
                             return (
                                 <g key={index} transform={`rotate(${rotation} ${size/2} ${size/2})`}>
-                                    <circle
-                                        cx={size / 2}
-                                        cy={size / 2}
-                                        r={radius}
-                                        fill="transparent"
-                                        stroke={isFuture ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.9)"} // Gray vs White
-                                        strokeWidth={strokeWidth}
-                                        strokeDasharray={dashArray}
-                                        strokeDashoffset={0}
-                                        strokeLinecap="round"
-                                        style={{ 
-                                            transition: 'stroke 1.5s ease-in-out',
-                                            filter: isActive ? 'drop-shadow(0 0 5px rgba(255,255,255,0.3))' : 'none'
-                                        }}
-                                    />
+                                    <circle cx={size / 2} cy={size / 2} r={radius} fill="transparent" stroke={isFuture ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.9)"} strokeWidth={strokeWidth} strokeDasharray={dashArray} strokeDashoffset={0} strokeLinecap="round" style={{ transition: 'stroke 1.5s ease-in-out' }} />
                                     {(isActive || isPast) && (
-                                        <circle
-                                            cx={size / 2}
-                                            cy={size / 2}
-                                            r={radius}
-                                            fill="transparent"
-                                            stroke="#f59e0b" // Amber
-                                            strokeWidth={strokeWidth}
-                                            strokeDasharray={`${segmentLength * progress} ${circumference - (segmentLength * progress)}`}
-                                            strokeDashoffset={0} 
-                                            strokeLinecap="round"
-                                            style={{ 
-                                                transition: isActive ? 'stroke-dasharray 1s linear' : 'none',
-                                                filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))'
-                                            }}
-                                        />
+                                        <circle cx={size / 2} cy={size / 2} r={radius} fill="transparent" stroke="#f59e0b" strokeWidth={strokeWidth} strokeDasharray={`${segmentLength * progress} ${circumference - (segmentLength * progress)}`} strokeDashoffset={0} strokeLinecap="round" style={{ transition: isActive ? 'stroke-dasharray 1s linear' : 'none', filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))' }} />
                                     )}
                                 </g>
                             );
                         })}
                     </svg>
-                    <div className="relative z-10 flex flex-col items-center justify-center">
-                        {children}
-                    </div>
+                    <div className="relative z-10 flex flex-col items-center justify-center">{children}</div>
                 </div>
             );
         };
 
-        // --- Core Logic ---
-        const GO_SCREEN_HOLD_DURATION_MS = 1000;
-
-        // --- Helper Components (Defined before App to avoid ordering issues) ---
-
-        // Helper Component for Target Weight
-        const TargetWeightDisplay = ({ value }) => (
-            <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">
-                    Target Weight
-                </p>
-                <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-6xl font-light text-white text-glow">{value}</span>
-                    <span className="text-2xl text-white/40 font-light">g</span>
-                </div>
-            </div>
-        );
-
-        // --- Background Component (Moved before App) ---
-        // Uses CSS Radial Gradients to completely eliminate banding/grid artifacts on iOS
+        // --- 背景漸層元件 ---
         const BackgroundEffect = ({ color }) => {
-            // Map Tailwind classes to RGBA values for gradients
             const getColorValue = (c) => {
-                if (!c) return 'rgba(245, 158, 11, 0.2)'; // Safety fallback
-                if (c.includes('amber-500')) return 'rgba(245, 158, 11, 0.4)'; // Amber 500 (GO)
-                if (c.includes('cyan-500')) return 'rgba(6, 182, 212, 0.4)'; // Cyan 500 (Countdown)
-                if (c.includes('amber-800')) return 'rgba(146, 64, 14, 0.3)'; // Amber 800 (Setup)
-                if (c.includes('orange-600')) return 'rgba(234, 88, 12, 0.3)'; // Orange 600 (Brewing)
-                if (c.includes('green-600')) return 'rgba(22, 163, 74, 0.3)'; // Green 600 (Finished)
-                return 'rgba(245, 158, 11, 0.2)'; // Default
+                if (!c) return 'rgba(245, 158, 11, 0.2)';
+                if (c.includes('amber-500')) return 'rgba(245, 158, 11, 0.4)';
+                if (c.includes('cyan-500')) return 'rgba(6, 182, 212, 0.4)';
+                if (c.includes('amber-800')) return 'rgba(146, 64, 14, 0.3)';
+                if (c.includes('orange-600')) return 'rgba(234, 88, 12, 0.3)';
+                if (c.includes('green-600')) return 'rgba(22, 163, 74, 0.3)';
+                return 'rgba(245, 158, 11, 0.2)';
             };
-
             const mainColor = getColorValue(color);
-
             return (
                 <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-black">
-                     {/* Main Gradient - Top Left (Dynamic Color) */}
-                    <div 
-                        className="absolute inset-0 transition-all duration-1000 ease-in-out"
-                        style={{
-                            background: `radial-gradient(circle at 20% 20%, ${mainColor}, transparent 60%)`
-                        }}
-                    ></div>
-
-                    {/* Secondary Gradient - Bottom Right (Static Blue Tint) */}
-                    <div 
-                        className="absolute inset-0"
-                        style={{
-                            background: `radial-gradient(circle at 80% 80%, rgba(30, 58, 138, 0.2), transparent 50%)`
-                        }}
-                    ></div>
-
-                     {/* Noise Texture - Subtle Grain */}
+                    <div className="absolute inset-0 transition-all duration-1000 ease-in-out" style={{ background: `radial-gradient(circle at 20% 20%, ${mainColor}, transparent 60%)` }}></div>
+                    <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 80% 80%, rgba(30, 58, 138, 0.2), transparent 50%)` }}></div>
                     <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay" style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")"}}></div>
                 </div>
             );
         };
 
+        const GO_SCREEN_HOLD_DURATION_MS = 1000;
+
+        // --- 主應用邏輯 ---
         const App = () => {
-            // State
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
-            const [flavor, setFlavor] = useState('sweet'); // sweet, balanced, acidic
-            const [strength, setStrength] = useState('strong'); // standard, strong
+            const [flavor, setFlavor] = useState('sweet');
+            const [strength, setStrength] = useState('strong');
             const [isBrewing, setIsBrewing] = useState(false);
+            const [isObserving, setIsObserving] = useState(false);
             const [timer, setTimer] = useState(0);
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
-            
-            // Editing State
             const [isEditingBeans, setIsEditingBeans] = useState(false);
             const [isEditingRatio, setIsEditingRatio] = useState(false); 
             const [tempBeans, setTempBeans] = useState(20);
             
             const beansInputRef = useRef(null);
             const ratioControlRef = useRef(null);
-
-            // Refs
             const intervalRef = useRef(null);
             const audioCtxRef = useRef(null);
             const wakeLockRef = useRef(null);
 
-            // Calculations
             const totalWater = beans * ratio;
             const phase1Water = totalWater * 0.4;
             const phase2Water = totalWater * 0.6;
@@ -403,36 +263,93 @@
                 let s1, s2;
                 if (flavor === 'sweet') { s1 = phase1Water * 0.4; s2 = phase1Water * 0.6; }
                 else if (flavor === 'acidic') { s1 = phase1Water * 0.6; s2 = phase1Water * 0.4; }
-                else { s1 = phase1Water * 0.5; s2 = phase1Water * 0.5; } // balanced
-                
-                steps.push({ weight: s1, cumulative: s1, text: "Bloom", duration: 45, phase: 'Flavor' });
-                steps.push({ weight: s2, cumulative: s1 + s2, text: "Flavor", duration: 45, phase: 'Flavor' });
-
-                const strengthCount = strength === 'strong' ? 3 : 2;
-                const perStep = phase2Water / strengthCount;
-                let currentCumulative = s1 + s2;
-
-                for (let i = 0; i < strengthCount; i++) {
-                    currentCumulative += perStep;
-                    steps.push({ weight: perStep, cumulative: currentCumulative, text: `Strength ${i+1}`, duration: 45, phase: 'Strength' });
-                }
+                else { s1 = phase1Water * 0.5; s2 = phase1Water * 0.5; }
+                steps.push({ weight: s1, cumulative: s1, text: "Bloom", duration: 45 });
+                steps.push({ weight: s2, cumulative: s1 + s2, text: "Flavor", duration: 45 });
+                const count = strength === 'strong' ? 3 : 2;
+                const perStep = phase2Water / count;
+                let cum = s1 + s2;
+                for (let i = 0; i < count; i++) { cum += perStep; steps.push({ weight: perStep, cumulative: cum, text: `Strength ${i+1}`, duration: 45 }); }
                 return steps;
             };
 
             const steps = getSteps();
             const currentStep = steps[currentStepIndex];
-
-            // Timer Metrics
             const currentStepStartTime = steps.slice(0, currentStepIndex).reduce((acc, s) => acc + s.duration, 0);
-            const timeInCurrentStep = timer - currentStepStartTime;
-            const remainingTimeInStep = Math.max(0, currentStep.duration - timeInCurrentStep);
-            
-            const nextCumulativeWater = currentStepIndex < steps.length - 1 
-                                        ? Math.round(steps[currentStepIndex + 1].cumulative) 
-                                        : null;
+            const remainingTimeInStep = Math.max(0, currentStep.duration - (timer - currentStepStartTime));
 
-            // --- Effects ---
+            // 計時邏輯：精確的 0.5s 起步與後續 1s 循環
+            useEffect(() => {
+                if (isBrewing || isObserving) {
+                    if (Math.abs(timer - 0.5) < 0.01) {
+                         const id = setTimeout(() => {
+                            setTimer(1); 
+                            intervalRef.current = setInterval(() => {
+                                setTimer(t => t + 1);
+                            }, 1000);
+                        }, 500); 
+                        
+                        return () => {
+                            clearTimeout(id);
+                            clearInterval(intervalRef.current);
+                        };
+                    } else {
+                        intervalRef.current = setInterval(() => setTimer(prev => prev + 1), 1000);
+                        return () => clearInterval(intervalRef.current);
+                    }
+                }
+            }, [isBrewing, isObserving]);
+
+            // 沖煮進度與音效邏輯
+            useEffect(() => {
+                if (!isBrewing) return;
+                let stepEndTime = currentStepStartTime + currentStep.duration;
+                let timeRemaining = stepEndTime - timer;
+                
+                // 倒數音效：針對所有步驟（包含最後一步）的最後 3 秒
+                if (timer > 0 && timeRemaining <= 3 && timeRemaining >= 1) {
+                     playBeep('tick');
+                }
+
+                // 檢查步驟切換或完成
+                if (timer >= stepEndTime) {
+                    if (currentStepIndex < steps.length - 1) {
+                        playBeep('start');
+                        setCurrentStepIndex(prev => prev + 1);
+                    } else {
+                        setIsBrewing(false);
+                        setIsObserving(true); 
+                        playSuccessSound(); 
+                    }
+                }
+            }, [timer, isBrewing]);
+
+            const initAudio = () => { if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)(); };
+            const playBeep = (type) => {
+                if (!soundEnabled) return; initAudio(); const ctx = audioCtxRef.current; const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination); const now = ctx.currentTime;
+                if (type === 'tick') { osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+                else { osc.frequency.setValueAtTime(880, now); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2); osc.start(now); osc.stop(now + 1.2); }
+            };
+            const playSuccessSound = () => {
+                if (!soundEnabled) return; initAudio(); const ctx = audioCtxRef.current; const now = ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+                    const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination);
+                    const st = now + (i * 0.1); o.frequency.setValueAtTime(f, st); g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(0.1, st + 0.05); g.gain.exponentialRampToValueAtTime(0.001, st + 1.5); o.start(st); o.stop(st + 1.5);
+                });
+            };
+
+            const handleStart = () => { initAudio(); setCountdown(3); };
+            const handleReset = () => { setIsBrewing(false); setIsObserving(false); setTimer(0); setCurrentStepIndex(0); setCountdown(null); };
             
+            const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+            
+            const handleBeansSubmit = () => {
+                let val = Number(tempBeans);
+                if (!isNaN(val) && val >= 10 && val <= 40) setBeans(Math.round(val));
+                setIsEditingBeans(false);
+            };
+
             useEffect(() => {
                 if (!isEditingRatio) return;
                 const handleClickOutside = (e) => {
@@ -449,149 +366,25 @@
             }, [isEditingRatio]);
 
             useEffect(() => {
-                const requestWakeLock = async () => {
-                    try {
-                        if ('wakeLock' in navigator) {
-                            wakeLockRef.current = await navigator.wakeLock.request('screen');
-                        }
-                    } catch (err) { console.warn('Wake Lock Error', err); }
-                };
-                const releaseWakeLock = async () => {
-                    if (wakeLockRef.current) await wakeLockRef.current.release();
-                    wakeLockRef.current = null;
-                };
-
-                if (isBrewing || countdown !== null) requestWakeLock();
-                else releaseWakeLock();
-
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible' && (isBrewing || countdown !== null)) requestWakeLock();
-                });
-                return () => releaseWakeLock();
-            }, [isBrewing, countdown]);
-
-            const initAudio = () => {
-                if (!audioCtxRef.current) {
-                    audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-                } else if (audioCtxRef.current.state === 'suspended') {
-                    audioCtxRef.current.resume();
-                }
-                return audioCtxRef.current;
-            };
-
-            const playBeep = (type) => {
-                if (!soundEnabled) return;
-                const ctx = initAudio();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                const now = ctx.currentTime;
-
-                if (type === 'tick') {
-                    osc.frequency.setValueAtTime(600, now);
-                    gain.gain.setValueAtTime(0.05, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-                    osc.start(now);
-                    osc.stop(now + 0.1);
-                } else if (type === 'start') {
-                    osc.frequency.setValueAtTime(880, now);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-                    osc.start(now);
-                    osc.stop(now + 1.2);
-                }
-            };
-
-            const playSuccessSound = () => {
-                if (!soundEnabled) return;
-                const ctx = initAudio();
-                const now = ctx.currentTime;
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, i) => {
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    const startTime = now + (i * 0.1); 
-                    osc.frequency.setValueAtTime(freq, startTime);
-                    osc.type = 'sine';
-                    gain.gain.setValueAtTime(0, startTime);
-                    gain.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
-                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 1.5);
-                    osc.start(startTime);
-                    osc.stop(startTime + 1.5);
-                });
-            };
-
-            useEffect(() => {
                 if (countdown === null) return;
-                if (countdown > 0) {
-                    playBeep('tick');
-                    const timerId = setTimeout(() => setCountdown(prev => prev - 1), 1000);
-                    return () => clearTimeout(timerId);
-                } else {
-                    playBeep('start');
-                    const startDelay = setTimeout(() => {
-                        setCountdown(null);
-                        setTimer(GO_SCREEN_HOLD_DURATION_MS / 1000);
-                        setCurrentStepIndex(0);
-                        setIsBrewing(true);
-                    }, GO_SCREEN_HOLD_DURATION_MS);
-                    return () => clearTimeout(startDelay);
+                if (countdown > 0) { 
+                    playBeep('tick'); 
+                    const t = setTimeout(() => setCountdown(countdown - 1), 1000); 
+                    return () => clearTimeout(t); 
+                } else { 
+                    playBeep('start'); 
+                    const t = setTimeout(() => { 
+                        setCountdown(null); 
+                        setTimer(0.5); 
+                        setIsBrewing(true); 
+                    }, GO_SCREEN_HOLD_DURATION_MS); 
+                    return () => clearTimeout(t); 
                 }
             }, [countdown]);
 
-            useEffect(() => {
-                if (isBrewing) {
-                    intervalRef.current = setInterval(() => setTimer(prev => prev + 1), 1000);
-                } else clearInterval(intervalRef.current);
-                return () => clearInterval(intervalRef.current);
-            }, [isBrewing]);
-
-            useEffect(() => {
-                if (!isBrewing) return;
-                let timeAccumulated = 0;
-                for (let i = 0; i < currentStepIndex; i++) timeAccumulated += steps[i].duration;
-                const stepEndTime = timeAccumulated + currentStep.duration;
-                const isLastStep = currentStepIndex === steps.length - 1;
-
-                if (timer > 0) {
-                    const timeRemaining = stepEndTime - timer;
-                    if (!isLastStep && timeRemaining <= 3 && timeRemaining >= 1) {
-                        playBeep('tick');
-                    }
-                }
-                if (timer > 0 && timer === stepEndTime) {
-                    if (!isLastStep) playBeep('start');
-                }
-
-                if (timer >= stepEndTime) {
-                    if (currentStepIndex < steps.length - 1) {
-                        setCurrentStepIndex(prev => prev + 1);
-                    } else {
-                        setIsBrewing(false);
-                        playSuccessSound(); 
-                    }
-                }
-            }, [timer, isBrewing, currentStepIndex, steps]);
-
-            const handleStart = () => {
-                initAudio();
-                setCountdown(3);
-            };
-            const handleReset = () => { setIsBrewing(false); setTimer(0); setCurrentStepIndex(0); setCountdown(null); };
-            const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+            // --- UI 渲染 ---
             
-            const handleBeansSubmit = () => {
-                let val = Number(tempBeans);
-                if (!isNaN(val) && val >= 10 && val <= 40) setBeans(Math.round(val));
-                setIsEditingBeans(false);
-            };
-
-            // --- UI RENDERERS ---
-
-            // 1. Countdown View
+            // 1. 倒數畫面
             if (countdown !== null) {
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
@@ -615,15 +408,12 @@
                 );
             }
 
-            // 2. Setup View
-            if (!isBrewing && timer === 0) {
+            // 2. 設定主畫面
+            if (!isBrewing && !isObserving && timer === 0) {
                 return (
                     <div className="h-screen w-full flex flex-col relative overflow-hidden">
                         <BackgroundEffect color="bg-amber-800" />
-                        
-                        {/* SCROLLABLE WRAPPER (Header + Main) */}
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
-                            
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <AppLogo size={42} />
@@ -638,62 +428,30 @@
                             </header>
 
                             <main className="px-6 pb-48 space-y-6 pt-0">
-                                
-                                {/* Setup Controls */}
                                 <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden group">
                                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-50"></div>
                                     <h2 className="text-sm uppercase tracking-widest text-amber-500/80 mb-6 font-medium">Coffee Beans</h2>
-                                    
                                     <div className="relative h-32 flex items-center justify-center">
                                         {isEditingBeans ? (
-                                            <div className="flex items-baseline">
-                                                <input
-                                                    ref={beansInputRef}
-                                                    type="number"
-                                                    value={tempBeans}
-                                                    onChange={(e) => setTempBeans(e.target.value)}
-                                                    onBlur={handleBeansSubmit}
-                                                    onKeyDown={(e) => e.key === 'Enter' && handleBeansSubmit()}
-                                                    autoFocus
-                                                    className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50"
-                                                />
-                                            </div>
+                                            <input ref={beansInputRef} type="number" value={tempBeans} onChange={(e) => setTempBeans(e.target.value)} onBlur={handleBeansSubmit} onKeyDown={(e) => e.key === 'Enter' && handleBeansSubmit()} autoFocus className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50" />
                                         ) : (
                                             <div onClick={() => { setIsEditingBeans(true); setTempBeans(beans); }} className="cursor-pointer transition-transform active:scale-95">
-                                                <span className="text-8xl font-thin text-white text-glow">{beans}</span>
-                                                <span className="text-2xl text-white/40 font-light ml-2">g</span>
+                                                <span className="text-8xl font-thin text-white text-glow">{beans}</span><span className="text-2xl text-white/40 font-light ml-2">g</span>
                                             </div>
                                         )}
                                     </div>
-
                                     <div className="mt-6 px-4">
-                                        <input 
-                                            type="range" min="10" max="40" step="1" 
-                                            value={beans} 
-                                            onChange={(e) => setBeans(Number(e.target.value))} 
-                                            className="accent-amber-500"
-                                        />
-                                        
+                                        <input type="range" min="10" max="40" step="1" value={beans} onChange={(e) => setBeans(Number(e.target.value))} className="accent-amber-500" />
                                         <div className="flex justify-center items-center text-xs text-white/30 mt-3 font-mono relative h-8">
                                             {isEditingRatio ? (
                                                 <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-black/40 rounded-full px-2 py-1 border border-white/20">
                                                     <span className="text-white shrink-0 font-bold w-8 text-right">1:{ratio}</span>
-                                                    <input 
-                                                        type="range" min="10" max="20" step="1"
-                                                        value={ratio}
-                                                        onChange={(e) => setRatio(Number(e.target.value))}
-                                                        className="w-full slider-ratio h-1"
-                                                    />
+                                                    <input type="range" min="10" max="20" step="1" value={ratio} onChange={(e) => setRatio(Number(e.target.value))} className="w-full slider-ratio h-1" />
                                                 </div>
                                             ) : (
-                                                <>
-                                                    <span 
-                                                        onClick={() => setIsEditingRatio(true)} 
-                                                        className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10"
-                                                    >
-                                                        TARGET: {Math.round(totalWater)}ml <span className="text-white/50">(1:{ratio})</span>
-                                                    </span>
-                                                </>
+                                                <span onClick={() => setIsEditingRatio(true)} className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-3 py-1 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10">
+                                                    TARGET: {Math.round(totalWater)}ml <span className="text-white/50">(1:{ratio})</span>
+                                                </span>
                                             )}
                                         </div>
                                     </div>
@@ -705,11 +463,7 @@
                                     </label>
                                     <div className="grid grid-cols-3 gap-3">
                                         {[{id: 'sweet', label: 'Sweet'}, {id: 'balanced', label: 'Balance'}, {id: 'acidic', label: 'Acidity'}].map(opt => (
-                                            <button 
-                                                key={opt.id} 
-                                                onClick={() => setFlavor(opt.id)}
-                                                className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${flavor === opt.id ? 'active' : ''}`}
-                                            >
+                                            <button key={opt.id} onClick={() => setFlavor(opt.id)} className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${flavor === opt.id ? 'active' : ''}`}>
                                                 <span className="text-sm font-medium">{opt.label}</span>
                                             </button>
                                         ))}
@@ -722,11 +476,7 @@
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
                                         {[{id: 'standard', label: 'Standard', desc: '2 Pours'}, {id: 'strong', label: 'Strong', desc: '3 Pours'}].map(opt => (
-                                            <button 
-                                                key={opt.id} 
-                                                onClick={() => setStrength(opt.id)}
-                                                className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${strength === opt.id ? 'active' : ''}`}
-                                            >
+                                            <button key={opt.id} onClick={() => setStrength(opt.id)} className={`glass-button rounded-2xl py-4 flex flex-col items-center justify-center gap-1 ${strength === opt.id ? 'active' : ''}`}>
                                                 <span className="text-sm font-medium">{opt.label}</span>
                                                 <span className="text-[10px] opacity-60 scale-90">{opt.desc}</span>
                                             </button>
@@ -744,7 +494,6 @@
                                             <span className="w-8 text-right">Water</span>
                                         </div>
                                     </div>
-
                                     <div className="space-y-3">
                                         {steps.map((step, index) => (
                                             <div key={index} className="flex justify-between items-center text-sm border-b border-white/5 last:border-0 pb-2 last:pb-0 px-1">
@@ -766,7 +515,6 @@
                                         <Thermometer size={14} />
                                         <span>Temp Guide</span>
                                     </div>
-
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
                                             <span className="text-xs text-white/40 mb-1">Light</span>
@@ -782,21 +530,14 @@
                                         </div>
                                     </div>
                                 </section>
-                                
                                 <div className="w-full flex justify-end py-4 pr-2">
-                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.13</p>
+                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.20</p>
                                 </div>
-
                             </main>
                         </div>
-
-                        {/* BOTTOM BUTTON: With Gradient Cover */}
-                        <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black/80 via-black/80 via-40% to-transparent pt-32 pb-12 pointer-events-none">
-                             <button 
-                                onClick={handleStart}
-                                className="pointer-events-auto px-10 py-5 bg-amber-900/20 text-amber-500 rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.15)] border border-amber-500/50 backdrop-blur-xl active:scale-95 transition-all duration-200 hover:bg-amber-900/40 hover:text-amber-400"
-                            >
-                                <Play size={24} className="fill-amber-500" />
+                        <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
+                            <button onClick={handleStart} className="pointer-events-auto px-10 py-5 bg-amber-900/20 text-amber-500 rounded-full flex items-center gap-3 shadow-[0_0_40px_rgba(245,158,11,0.15)] border border-amber-500/50 backdrop-blur-xl active:scale-95 transition-all">
+                                <IconBase size={24}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></IconBase>
                                 <span className="text-lg font-bold tracking-wide">START BREW</span>
                             </button>
                         </div>
@@ -804,102 +545,58 @@
                 );
             }
 
-            // 3. Active Brewing / Finished View
-            const isFinished = !isBrewing && timer > 0;
-
+            // 3. 沖煮中與觀察模式畫面
             return (
-                <div className="h-screen w-full flex flex-col relative overflow-hidden"> 
-                    <BackgroundEffect color={isFinished ? "bg-green-600" : "bg-orange-600"} />
-                    
-                    <header className="absolute top-0 left-0 right-0 pt-14 pb-2 px-6 flex justify-between items-center z-20"> 
+                <div className="h-screen w-full flex flex-col relative overflow-hidden">
+                    <BackgroundEffect color={isObserving ? "bg-green-600" : "bg-orange-600"} />
+                    <header className="absolute top-0 left-0 right-0 pt-14 pb-2 px-6 flex justify-between items-center z-20">
                         <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white z-30">
-                            {isFinished ? <X size={20}/> : <RotateCcw size={18} />}
+                            {isObserving ? <IconBase size={20}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></IconBase> : <IconBase size={18}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></IconBase>}
                         </button>
                         
-                        {isFinished && (
-                            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 pt-12 font-mono text-xl tracking-widest text-white/80 tabular-nums">
-                                {formatTime(timer)}
-                            </div>
-                        )}
+                        <div className="flex flex-col items-center">
+                            <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-medium mb-1">Total Time</p>
+                            <span className="text-2xl font-light text-white text-glow tabular-nums">{formatTime(timer)}</span>
+                        </div>
 
                         <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 z-30">
                             {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
                         </button>
                     </header>
 
-                    <main className="h-full w-full flex flex-col items-center justify-center z-10 relative"> 
-                        
-                        {isFinished ? (
-                            // Finished State
-                            <div className="flex-1 flex flex-col items-center justify-start pt-32 p-8 w-full">
-                                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-green-400 to-emerald-600 flex items-center justify-center shadow-[0_0_50px_rgba(52,211,153,0.4)] mb-4">
-                                    <Coffee size={40} className="text-white" />
+                    <main className="h-full w-full flex flex-col items-center justify-center z-10 relative">
+                        {isObserving ? (
+                            <div className="flex flex-col items-center animate-in fade-in duration-700">
+                                <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-6">
+                                    <IconBase size={40} className="text-emerald-500"><path d="M17 8h1a4 4 0 0 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="8" /><line x1="10" x2="10" y1="2" y2="8" /><line x1="14" x2="14" y1="2" y2="8" /></IconBase>
                                 </div>
-                                <h2 className="text-4xl font-light text-white mb-2">Enjoy</h2>
-                                <p className="text-white/50 tracking-widest uppercase text-sm mb-12">Brew Completed</p>
-                                
+                                <h2 className="text-4xl font-light text-white mb-2">Enjoy Your Brew</h2>
+                                <p className="text-white/40 text-sm uppercase tracking-widest mb-10">Observation Stage</p>
                                 <div className="glass-panel px-10 py-6 rounded-3xl text-center">
-                                    <span className="block text-xs text-white/40 uppercase tracking-widest mb-2">Total Water</span>
-                                    <span className="text-5xl font-thin text-white">{Math.round(totalWater)}<span className="text-lg text-white/40 ml-1">ml</span></span>
+                                    <span className="block text-xs text-white/40 uppercase tracking-widest mb-1">Final Water</span>
+                                    <span className="text-5xl font-thin text-white">{Math.round(totalWater)}<span className="text-xl text-white/40 ml-1">ml</span></span>
                                 </div>
-                                
-                                <button onClick={handleReset} className="mt-12 text-white/60 text-sm hover:text-white transition-colors uppercase tracking-widest border-b border-transparent hover:border-white/40 pb-1">
-                                    Brew Again
-                                </button>
                             </div>
                         ) : (
-                            // Brewing State - UNIFIED ABSOLUTE LAYOUT (v2.52)
-                            // Following v2.20 container structure but v2.47 content
                             <>
-                                {/* 1. Main Visual (Timer) - Fixed Center Position */}
-                                {/* Centered at top 35% of screen */}
                                 <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
-                                     <SegmentedTimer 
-                                        steps={steps}
-                                        currentStepIndex={currentStepIndex}
-                                        remainingTimeInStep={remainingTimeInStep} 
-                                        currentStepDuration={currentStep.duration}
-                                        size={window.innerWidth < 380 ? 240 : 280}
-                                    >
+                                    <SegmentedTimer steps={steps} currentStepIndex={currentStepIndex} remainingTimeInStep={remainingTimeInStep} currentStepDuration={currentStep.duration}>
                                         <div className="flex flex-col items-center">
-                                            <h1 className="text-9xl font-thin tabular-nums text-white text-glow leading-none tracking-tighter">
-                                                {remainingTimeInStep}
-                                            </h1>
-                                            <p className="text-white/40 text-xs font-mono tracking-[0.5em] mt-2">SECONDS</p>
+                                            <h1 className="text-9xl font-thin tabular-nums text-white text-glow leading-none">{Math.ceil(remainingTimeInStep)}</h1>
+                                            <p className="text-white/40 text-xs font-mono tracking-[0.5em] mt-2">STEP {currentStepIndex + 1}</p>
                                         </div>
                                     </SegmentedTimer>
                                 </div>
-
-                                {/* 2. Data Cluster - Fixed Start Position */}
-                                {/* Fixed position starting at top 47% (Reverted from 49%) */}
                                 <div className="absolute top-[47%] left-0 right-0 flex flex-col items-center">
-                                    
-                                    {/* Invisible Spacer (Matches 'READY' height) - mb-9 */}
-                                    <div className="mb-9 h-7 w-1"></div>
-
-                                    {/* Target Weight Display */}
-                                    <div className="flex flex-col items-center justify-center z-30">
-                                        <TargetWeightDisplay value={Math.round(currentStep.cumulative)} />
-                                        
-                                        {/* Next Target Hint - MODIFIED for spacing consistency (v3.8) */}
-                                        {nextCumulativeWater && (
-                                            <div className="mt-4 flex justify-center animate-in fade-in slide-in-from-bottom-2 absolute top-full pt-4">
-                                                <div className="px-3 py-1 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm flex items-center">
-                                                    <span className="text-white/40 text-[10px] uppercase tracking-wider mr-2">Next</span>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-white/80 text-sm font-mono">{nextCumulativeWater}</span>
-                                                        <span className="text-white/40 text-[10px] font-mono">g</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                    
-                                </div>
-
-                                {/* Step Counter (Footer) - Kept independent */}
-                                <div className="absolute bottom-10 left-0 right-0 flex justify-center text-white/30 font-mono text-xs tracking-widest uppercase">
-                                    STEP {currentStepIndex + 1} / {steps.length}
+                                    <div className="mb-9 h-7"></div>
+                                    <TargetWeightDisplay value={Math.round(currentStep.cumulative)} />
+                                    {currentStepIndex < steps.length - 1 && (
+                                        <div className="mt-8 px-4 py-2 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
+                                            <span className="text-white/40 text-[10px] uppercase tracking-wider">Next</span>
+                                            <span className="text-white/80 text-sm font-mono">{Math.round(steps[currentStepIndex+1].cumulative)}</span>
+                                            <span className="text-white/40 text-[10px] font-mono">g</span>
+                                        </div>
+                                    )}
                                 </div>
                             </>
                         )}
