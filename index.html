@@ -32,8 +32,8 @@
             touch-action: manipulation;
         }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none !important; }
+        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
 
         input[type=range] {
             -webkit-appearance: none;
@@ -42,14 +42,14 @@
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 28px;
-            width: 28px;
+            height: 24px;
+            width: 24px;
             border-radius: 50%;
             background: #ffffff;
             cursor: pointer;
-            margin-top: -12px;
-            box-shadow: 0 0 20px rgba(255,255,255,0.8);
-            border: 2px solid rgba(255,255,255,0.5);
+            margin-top: -10px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.4);
+            border: 1px solid rgba(255,255,255,0.8);
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
@@ -59,35 +59,35 @@
             border-radius: 2px;
         }
 
-        /* v3.52: 半透明優化 - 移除 blur 以省電，但調低 alpha 值增加透明感 */
+        input[type=range].slider-ratio::-webkit-slider-thumb {
+            height: 18px;
+            width: 18px;
+            margin-top: -7px;
+        }
+
         .glass-panel {
-            background: rgba(20, 20, 20, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.22);
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
+        
         .glass-button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.07);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .glass-button:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
         .glass-button.active {
-            background: rgba(245, 158, 11, 0.2); 
-            border-color: rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.25); 
+            border-color: rgba(245, 158, 11, 0.5);
             color: #fbbf24;
         }
 
-        /* 呼吸特效動畫 */
-        @keyframes breathe {
-            0%, 100% { opacity: 0.4; transform: scale(0.98); }
-            50% { opacity: 0.9; transform: scale(1.02); }
-        }
-        .animate-breathe {
-            animation: breathe 3s infinite ease-in-out;
-        }
-
         .text-glow { text-shadow: 0 0 25px rgba(255,255,255,0.4); }
-        .text-glow-go { text-shadow: 0 0 35px rgba(236, 72, 153, 0.6); }
+        .text-glow-go { text-shadow: 0 0 35px rgba(6, 182, 212, 0.6); } 
     </style>
 </head>
 <body>
@@ -110,38 +110,20 @@
             </div>
         );
 
-        const TargetWeightDisplay = ({ value, label = "Target Weight" }) => (
-            <div className="flex flex-col items-center gap-1">
-                <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2">{label}</p>
-                <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-6xl font-light text-white text-glow">{value}</span>
-                    <span className="text-2xl text-white/40 font-light">g</span>
-                </div>
-            </div>
-        );
-
-        // v3.52: 靜態色彩背景 - 還原 v3.8 經典色調布局
         const BackgroundEffect = ({ mode }) => {
             const getColors = () => {
                 switch(mode) {
-                    case 'go': 
-                        return { p: 'rgba(236, 72, 153, 0.25)', s: 'rgba(30, 58, 138, 0.3)', a: 'rgba(139, 92, 246, 0.15)' };
-                    case 'countdown': 
-                        return { p: 'rgba(6, 182, 212, 0.25)', s: 'rgba(15, 23, 42, 0.4)', a: 'rgba(2, 132, 199, 0.1)' };
-                    case 'observing': 
-                        return { p: 'rgba(16, 185, 129, 0.25)', s: 'rgba(20, 83, 45, 0.3)', a: 'rgba(101, 163, 13, 0.1)' };
-                    case 'brewing': 
-                        return { p: 'rgba(249, 115, 22, 0.25)', s: 'rgba(67, 20, 7, 0.3)', a: 'rgba(251, 146, 60, 0.1)' };
-                    default: 
-                        return { p: 'rgba(245, 158, 11, 0.22)', s: 'rgba(30, 58, 138, 0.22)', a: 'rgba(147, 51, 234, 0.15)' };
+                    case 'go': return { p: 'rgba(6, 182, 212, 0.35)', s: 'rgba(8, 145, 178, 0.25)', a: 'rgba(21, 94, 117, 0.15)' };
+                    case 'observing': return { p: 'rgba(16, 185, 129, 0.25)', s: 'rgba(6, 78, 59, 0.25)', a: 'rgba(2, 44, 34, 0.1)' };
+                    default: return { p: 'rgba(245, 158, 11, 0.22)', s: 'rgba(30, 58, 138, 0.22)', a: 'rgba(147, 51, 234, 0.15)' };
                 }
             };
             const c = getColors();
             return (
-                <div className="absolute inset-0 z-0 pointer-events-none bg-black transition-all duration-700">
-                    <div className="absolute top-[-10%] left-[-10%] w-full h-full" style={{ background: `radial-gradient(circle at 20% 20%, ${c.p} 0%, transparent 60%)` }} />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-full h-full" style={{ background: `radial-gradient(circle at 80% 80%, ${c.s} 0%, transparent 55%)` }} />
-                    <div className="absolute top-[30%] left-[5%] w-full h-full opacity-60" style={{ background: `radial-gradient(circle at 30% 50%, ${c.a} 0%, transparent 50%)` }} />
+                <div className="absolute inset-0 z-0 pointer-events-none bg-black transition-all duration-700 overflow-hidden">
+                    <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%]" style={{ background: `radial-gradient(circle at 20% 20%, ${c.p} 0%, transparent 60%)` }} />
+                    <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%]" style={{ background: `radial-gradient(circle at 80% 80%, ${c.s} 0%, transparent 55%)` }} />
+                    <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] opacity-60" style={{ background: `radial-gradient(circle at 30% 50%, ${c.a} 0%, transparent 50%)` }} />
                 </div>
             );
         };
@@ -190,14 +172,28 @@
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
+            
             const [isEditingBeans, setIsEditingBeans] = useState(false);
+            const [isEditingRatio, setIsEditingRatio] = useState(false);
+            const [isTempGuideOpen, setIsTempGuideOpen] = useState(false);
+            const [isAdvanceOpen, setIsAdvanceOpen] = useState(false);
             const [tempBeans, setTempBeans] = useState(20);
+            const [customTotalTime, setCustomTotalTime] = useState(0); 
             
             const beansInputRef = useRef(null);
+            const ratioControlRef = useRef(null);
             const intervalRef = useRef(null);
             const audioCtxRef = useRef(null);
 
             const totalWater = beans * ratio;
+
+            useEffect(() => {
+                const handleClickOutside = (e) => {
+                    if (ratioControlRef.current && !ratioControlRef.current.contains(e.target)) setIsEditingRatio(false);
+                };
+                document.addEventListener('mousedown', handleClickOutside);
+                return () => document.removeEventListener('mousedown', handleClickOutside);
+            }, [isEditingRatio]);
 
             const getSteps = () => {
                 let steps = [];
@@ -208,24 +204,30 @@
                     steps.push({ weight: 100 * unit, cumulative: 200 * unit, text: "Extraction", duration: 30 });
                     steps.push({ weight: 50 * unit, cumulative: 250 * unit, text: "Balance 1", duration: 30 });
                     steps.push({ weight: 50 * unit, cumulative: 300 * unit, text: "Balance 2", duration: 30 });
-                    return steps;
+                } else {
+                    const p1Total = totalWater * 0.4;
+                    const p2Total = totalWater * 0.6;
+                    let s1, s2;
+                    if (flavor === 'sweet') { s1 = p1Total * 0.4; s2 = p1Total * 0.6; }
+                    else if (flavor === 'acidic') { s1 = p1Total * 0.6; s2 = p1Total * 0.4; }
+                    else { s1 = p1Total * 0.5; s2 = p1Total * 0.5; }
+
+                    steps.push({ weight: s1, cumulative: s1, text: "Bloom", duration: 45 });
+                    steps.push({ weight: s2, cumulative: s1 + s2, text: "Flavor", duration: 45 });
+
+                    const strengthCount = strength === 'strong' ? 3 : 2;
+                    const perStep = p2Total / strengthCount;
+                    let cum = s1 + s2;
+                    for (let i = 0; i < strengthCount; i++) {
+                        cum += perStep;
+                        steps.push({ weight: perStep, cumulative: cum, text: `Strength ${i+1}`, duration: 45 });
+                    }
                 }
-                const p1Total = totalWater * 0.4;
-                const p2Total = totalWater * 0.6;
-                let s1, s2;
-                if (flavor === 'sweet') { s1 = p1Total * (5/12); s2 = p1Total * (7/12); }
-                else if (flavor === 'acidic') { s1 = p1Total * (7/12); s2 = p1Total * (5/12); }
-                else { s1 = p1Total * 0.5; s2 = p1Total * 0.5; }
 
-                steps.push({ weight: s1, cumulative: s1, text: "Bloom", duration: 45 });
-                steps.push({ weight: s2, cumulative: s1 + s2, text: "Flavor", duration: 45 });
-
-                const strengthCount = strength === 'strong' ? 3 : 2;
-                const perStep = p2Total / strengthCount;
-                let cum = s1 + s2;
-                for (let i = 0; i < strengthCount; i++) {
-                    cum += perStep;
-                    steps.push({ weight: perStep, cumulative: cum, text: `Strength ${i+1}`, duration: 45 });
+                if (customTotalTime > 0) {
+                    const standardTotal = steps.reduce((acc, s) => acc + s.duration, 0);
+                    const scale = customTotalTime / standardTotal;
+                    steps = steps.map(s => ({ ...s, duration: Math.round(s.duration * scale) }));
                 }
                 return steps;
             };
@@ -234,6 +236,7 @@
             const currentStep = steps[currentStepIndex];
             const currentStepStartTime = steps.slice(0, currentStepIndex).reduce((acc, s) => acc + s.duration, 0);
             const remainingTimeInStep = Math.max(0, currentStep.duration - (timer - currentStepStartTime));
+            const activeTotalTime = steps.reduce((acc, s) => acc + s.duration, 0);
 
             useEffect(() => {
                 if (isBrewing || isObserving) {
@@ -283,6 +286,16 @@
                 else { playBeep('start'); const t = setTimeout(() => { setCountdown(null); setIsBrewing(true); setTimer(1); }, 1000); return () => clearTimeout(t); }
             }, [countdown]);
 
+            const TargetWeightDisplay = ({ value, label = "Target Weight" }) => (
+                <div className="flex flex-col items-center gap-1">
+                    <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2">{label}</p>
+                    <div className="flex items-baseline justify-center gap-2">
+                        <span className="text-6xl font-light text-white text-glow">{value}</span>
+                        <span className="text-2xl text-white/40 font-light">g</span>
+                    </div>
+                </div>
+            );
+
             if (countdown !== null) {
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
@@ -305,37 +318,41 @@
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
                                 <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">4:6 Method</h1><p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p></div></div>
-                                <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center">
+                                <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60">
                                     {soundEnabled ? <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase> : <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" x2="17" y1="9" y2="15" /><line x1="17" x2="23" y1="9" y2="15" /></IconBase>}
                                 </button>
                             </header>
 
-                            <main className="px-6 pb-48 space-y-6 pt-0">
-                                <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden">
+                            <main className="px-6 pb-48 space-y-6 pt-0 max-w-full">
+                                <section className="glass-panel rounded-[2.5rem] p-8 text-center relative overflow-hidden group">
                                     <h2 className="text-sm uppercase tracking-widest text-amber-500/80 mb-6 font-medium">Coffee Beans</h2>
-                                    <div className="relative h-32 flex items-center justify-center" onClick={() => { setIsEditingBeans(true); setTempBeans(beans); }}>
+                                    <div className="relative h-28 flex items-center justify-center" onClick={() => { setIsEditingBeans(true); setTempBeans(beans); }}>
                                         {isEditingBeans ? <input ref={beansInputRef} type="number" value={tempBeans} onChange={(e) => setTempBeans(e.target.value)} onBlur={() => { setBeans(Number(tempBeans)); setIsEditingBeans(false); }} autoFocus className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50" /> : <div><span className="text-8xl font-thin text-white text-glow">{beans}</span><span className="text-2xl text-white/40 font-light ml-2">g</span></div>}
                                     </div>
-                                    <div className="mt-6 px-4"><input type="range" min="10" max="40" step="1" value={beans} onChange={(e) => setBeans(Number(e.target.value))} className="accent-amber-500" /></div>
+                                    <div className="mt-6 px-4">
+                                        <input type="range" min="10" max="40" step="1" value={beans} onChange={(e) => setBeans(Number(e.target.value))} className="accent-amber-500" />
+                                        <div className="flex justify-center items-center text-xs text-white/30 mt-6 font-mono relative h-10">
+                                            {isEditingRatio ? (
+                                                <div ref={ratioControlRef} className="relative z-50 flex items-center w-full gap-3 animate-in fade-in bg-white/10 rounded-full px-4 py-2 border border-white/10">
+                                                    <span className="text-white font-bold w-12 text-right shrink-0">1:{ratio}</span>
+                                                    <input type="range" min="10" max="20" step="1" value={ratio} onChange={(e) => setRatio(Number(e.target.value))} className="w-full slider-ratio h-1" />
+                                                </div>
+                                            ) : (
+                                                <span onClick={() => setIsEditingRatio(true)} className="cursor-pointer hover:text-white hover:scale-105 active:scale-95 transition-all text-white/50 font-bold px-4 py-1.5 rounded-full border border-white/5 bg-white/5">
+                                                    TARGET: {Math.round(totalWater)}ml <span className="text-white/30 ml-1">(1:{ratio})</span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </section>
 
                                 <section className="space-y-3">
                                     <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor (Phase 1)</label>
                                     <div className="grid grid-cols-4 gap-2">
-                                        {[
-                                            {id: 'sweet', label: 'Sweet'}, 
-                                            {id: 'balanced', label: 'Balance'}, 
-                                            {id: 'acidic', label: 'Acidic'}, 
-                                            {id: 'vibrant', label: 'Vibrant'}
-                                        ].map(opt => (
+                                        {[{id: 'sweet', label: 'Sweet'}, {id: 'balanced', label: 'Balance'}, {id: 'acidic', label: 'Acidic'}, {id: 'vibrant', label: 'Vibrant'}].map(opt => (
                                             <button key={opt.id} onClick={() => setFlavor(opt.id)} className={`glass-button rounded-xl py-4 text-[13px] font-medium ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
                                         ))}
                                     </div>
-                                    {flavor === 'vibrant' && (
-                                        <p className="text-[10px] text-amber-500/90 uppercase tracking-[0.2em] text-center mt-3 animate-breathe font-bold">
-                                            Enhanced Acidity & Sweetness Mode
-                                        </p>
-                                    )}
                                 </section>
 
                                 {flavor !== 'vibrant' && (
@@ -356,26 +373,61 @@
                                     </div>
                                     {steps.map((s, i) => (
                                         <div key={i} className="flex justify-between items-center text-sm border-b border-white/5 last:border-0 pb-2 h-10 px-1">
-                                            <div className="flex gap-2 font-mono items-center"><span className="text-amber-500/80">{i+1}</span><span className="text-white/80">{s.text}</span></div>
+                                            <div className="flex items-center gap-2 font-mono flex-1"><span className="text-amber-500/80 w-6">{i+1}</span><span className="text-white/80">{s.text}</span></div>
                                             <div className="flex gap-4 font-mono items-center"><span className="text-white/40 text-xs w-8 text-right">{s.duration}s</span><span className="text-white font-medium w-8 text-right">{Math.round(s.weight)}g</span></div>
                                         </div>
                                     ))}
                                 </section>
 
                                 <section className="space-y-3">
-                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2"><IconBase size={14}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" /></IconBase><span className="font-medium">Temp Guide</span></div>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="glass-panel bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Light</span><span className="text-sm font-mono text-white/90">93°C</span></div>
-                                        <div className="glass-panel bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Medium</span><span className="text-sm font-mono text-white/90">88°C</span></div>
-                                        <div className="glass-panel bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Dark</span><span className="text-sm font-mono text-white/90">83°C</span></div>
-                                    </div>
+                                    <button onClick={() => setIsTempGuideOpen(!isTempGuideOpen)} className="flex items-center gap-2 text-sm text-white/60 ml-2 font-medium tracking-wide">
+                                        <IconBase size={14}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" /></IconBase>
+                                        <span>Temp Guide</span>
+                                        <IconBase size={12} className={`transition-transform ${isTempGuideOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></IconBase>
+                                    </button>
+                                    {isTempGuideOpen && (
+                                        <div className="grid grid-cols-3 gap-3 animate-in slide-in-from-top-2 duration-300">
+                                            <div className="glass-panel rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Light</span><span className="text-sm font-mono text-white/90">93°C</span></div>
+                                            <div className="glass-panel rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Medium</span><span className="text-sm font-mono text-white/90">88°C</span></div>
+                                            <div className="glass-panel rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Dark</span><span className="text-sm font-mono text-white/90">83°C</span></div>
+                                        </div>
+                                    )}
                                 </section>
 
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.52</p></div>
+                                <section className="space-y-3">
+                                    <button onClick={() => setIsAdvanceOpen(!isAdvanceOpen)} className="flex items-center gap-2 text-sm text-white/60 ml-2 font-medium tracking-wide">
+                                        <IconBase size={14}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>
+                                        <span>Advance</span>
+                                        <IconBase size={12} className={`transition-transform ${isAdvanceOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></IconBase>
+                                    </button>
+                                    {isAdvanceOpen && (
+                                        <div className="glass-panel rounded-3xl p-6 space-y-6 animate-in slide-in-from-top-2 duration-300">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-white/40 uppercase font-bold tracking-widest">Total Brew Time</span>
+                                                    <span className="text-[10px] text-amber-500/60 uppercase">Auto-scaled ratio</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-2xl font-light text-white font-mono tracking-tighter">{formatTime(activeTotalTime)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="px-2">
+                                                <input type="range" min="120" max="330" step="5" value={customTotalTime === 0 ? activeTotalTime : customTotalTime} onChange={(e) => setCustomTotalTime(Number(e.target.value))} className="accent-white" />
+                                            </div>
+                                            <div className="grid grid-cols-3 items-center text-[10px] text-white/20 font-mono px-1">
+                                                <span className="text-left whitespace-nowrap">Fast (2m)</span>
+                                                <button onClick={() => setCustomTotalTime(0)} className="text-center text-amber-500/50 hover:text-amber-500 transition-colors font-bold uppercase tracking-wider whitespace-nowrap">Reset to Recommend</button>
+                                                <span className="text-right whitespace-nowrap">Slow (5m 30s)</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </section>
+
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.62</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
-                            <button onClick={handleStart} className="pointer-events-auto px-10 py-5 bg-amber-900/40 text-amber-500 rounded-full flex items-center gap-3 border border-amber-500/50 active:scale-95 transition-all">
+                            <button onClick={handleStart} className="pointer-events-auto px-10 py-5 bg-amber-900/40 text-amber-500 rounded-full flex items-center gap-3 border border-amber-500/50 active:scale-95 transition-all shadow-[0_10px_30px_rgba(245,158,11,0.2)]">
                                 <IconBase size={24}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></IconBase>
                                 <span className="text-lg font-bold tracking-wide">START BREW</span>
                             </button>
@@ -400,7 +452,7 @@
                         </button>
                     </header>
 
-                    <main className="h-full w-full flex flex-col items-center justify-center z-10 relative">
+                    <main className="h-full w-full flex flex-col items-center justify-center z-10 relative px-6">
                         {isObserving ? (
                             <div className="flex-1 flex flex-col items-center justify-start pt-32 p-8 w-full animate-in fade-in duration-700">
                                 <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-6">
@@ -409,7 +461,7 @@
                                 <h2 className="text-4xl font-light text-white mb-2 text-glow">Enjoy Your Brew</h2>
                                 <p className="text-white/40 text-sm uppercase tracking-widest mb-10 font-medium">Observation Stage</p>
                                 <div className="glass-panel px-10 py-6 rounded-3xl text-center">
-                                    <span className="block text-xs text-white/40 uppercase mb-1">Final Water</span>
+                                    <span className="block text-xs text-white/40 uppercase mb-1 tracking-widest">Final Water</span>
                                     <span className="text-5xl font-thin text-white">{Math.round(totalWater)}<span className="text-xl text-white/40 ml-1">ml</span></span>
                                 </div>
                             </div>
@@ -419,7 +471,7 @@
                                     <SegmentedTimer steps={steps} currentStepIndex={currentStepIndex} remainingTimeInStep={remainingTimeInStep} currentStepDuration={currentStep.duration}>
                                         <div className="flex flex-col items-center">
                                             <h1 className="text-9xl font-thin tabular-nums text-white text-glow leading-none tracking-tighter">{Math.ceil(remainingTimeInStep)}</h1>
-                                            <p className="text-white/40 text-xs font-mono tracking-[0.5em] mt-2 uppercase">{currentStep.text}</p>
+                                            <p className="text-white/40 text-xs font-mono tracking-[0.5em] mt-2 uppercase">SECONDS</p>
                                         </div>
                                     </SegmentedTimer>
                                 </div>
@@ -427,8 +479,8 @@
                                     <div className="mb-9 h-7"></div>
                                     <TargetWeightDisplay value={Math.round(currentStep.cumulative)} />
                                     {currentStepIndex < steps.length - 1 && (
-                                        <div className="mt-8 px-4 py-2 bg-white/5 rounded-full border border-white/5 flex items-center animate-in fade-in slide-in-from-bottom-2">
-                                            <span className="text-white/40 text-[10px] uppercase tracking-wider mr-2">Next</span>
+                                        <div className="mt-8 px-4 py-2 glass-panel rounded-full flex items-center animate-in fade-in slide-in-from-bottom-2">
+                                            <span className="text-white/40 text-[10px] uppercase tracking-wider mr-2 font-bold">Next</span>
                                             <div className="flex items-baseline gap-2"><span className="text-white/80 text-sm font-mono">{Math.round(steps[currentStepIndex+1].cumulative)}</span><span className="text-white/40 text-[10px] font-mono">g</span></div>
                                         </div>
                                     )}
