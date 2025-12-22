@@ -170,7 +170,6 @@
             const [isObserving, setIsObserving] = useState(false);
             const [timer, setTimer] = useState(0);
             const [currentStepIndex, setCurrentStepIndex] = useState(0);
-            const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
             
             const [isEditingBeans, setIsEditingBeans] = useState(false);
@@ -225,7 +224,7 @@
                 }
 
                 if (customTotalTime > 0) {
-                    const standardTotal = steps.reduce((acc, s) => acc + s.duration, 0);
+                    const standardTotal = flavor === 'vibrant' ? 180 : 225;
                     const scale = customTotalTime / standardTotal;
                     steps = steps.map(s => ({ ...s, duration: Math.round(s.duration * scale) }));
                 }
@@ -237,6 +236,12 @@
             const currentStepStartTime = steps.slice(0, currentStepIndex).reduce((acc, s) => acc + s.duration, 0);
             const remainingTimeInStep = Math.max(0, currentStep.duration - (timer - currentStepStartTime));
             const activeTotalTime = steps.reduce((acc, s) => acc + s.duration, 0);
+
+            // v3.68: Calculate symmetrical range based on flavor
+            const standardTotal = flavor === 'vibrant' ? 180 : 225;
+            const timeGap = 105; // 1m 45s
+            const minBrewTime = standardTotal - timeGap;
+            const maxBrewTime = standardTotal + timeGap;
 
             useEffect(() => {
                 if (isBrewing || isObserving) {
@@ -262,14 +267,16 @@
             }, [timer, isBrewing]);
 
             const initAudio = () => { if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)(); };
+            
             const playBeep = (type) => {
-                if (!soundEnabled) return; initAudio(); const ctx = audioCtxRef.current; const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                initAudio(); const ctx = audioCtxRef.current; const osc = ctx.createOscillator(); const gain = ctx.createGain();
                 osc.connect(gain); gain.connect(ctx.destination); const now = ctx.currentTime;
                 if (type === 'tick') { osc.frequency.setValueAtTime(600, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
                 else { osc.frequency.setValueAtTime(880, now); gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2); osc.start(now); osc.stop(now + 1.2); }
             };
+            
             const playSuccessSound = () => {
-                if (!soundEnabled) return; initAudio(); const ctx = audioCtxRef.current; const now = ctx.currentTime;
+                initAudio(); const ctx = audioCtxRef.current; const now = ctx.currentTime;
                 [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
                     const o = ctx.createOscillator(); const g = ctx.createGain(); o.connect(g); g.connect(ctx.destination);
                     const st = now + (i * 0.1); o.frequency.setValueAtTime(f, st); g.gain.setValueAtTime(0, st); g.gain.linearRampToValueAtTime(0.1, st + 0.05); g.gain.exponentialRampToValueAtTime(0.001, st + 1.5); o.start(st); o.stop(st + 1.5);
@@ -318,9 +325,6 @@
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
                                 <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">4:6 Method</h1><p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p></div></div>
-                                <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60">
-                                    {soundEnabled ? <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase> : <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" x2="17" y1="9" y2="15" /><line x1="17" x2="23" y1="9" y2="15" /></IconBase>}
-                                </button>
                             </header>
 
                             <main className="px-6 pb-48 space-y-6 pt-0 max-w-full">
@@ -350,7 +354,7 @@
                                     <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor (Phase 1)</label>
                                     <div className="grid grid-cols-4 gap-2">
                                         {[{id: 'sweet', label: 'Sweet'}, {id: 'balanced', label: 'Balance'}, {id: 'acidic', label: 'Acidic'}, {id: 'vibrant', label: 'Vibrant'}].map(opt => (
-                                            <button key={opt.id} onClick={() => setFlavor(opt.id)} className={`glass-button rounded-xl py-4 text-[13px] font-medium ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
+                                            <button key={opt.id} onClick={() => {setFlavor(opt.id); setCustomTotalTime(0);}} className={`glass-button rounded-xl py-4 text-[13px] font-medium ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
                                         ))}
                                     </div>
                                 </section>
@@ -396,7 +400,7 @@
 
                                 <section className="space-y-3">
                                     <button onClick={() => setIsAdvanceOpen(!isAdvanceOpen)} className="flex items-center gap-2 text-sm text-white/60 ml-2 font-medium tracking-wide">
-                                        <IconBase size={14}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>
+                                        <IconBase size={14}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></IconBase>
                                         <span>Advance</span>
                                         <IconBase size={12} className={`transition-transform ${isAdvanceOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></IconBase>
                                     </button>
@@ -405,25 +409,25 @@
                                             <div className="flex justify-between items-center">
                                                 <div className="flex flex-col">
                                                     <span className="text-xs text-white/40 uppercase font-bold tracking-widest">Total Brew Time</span>
-                                                    <span className="text-[10px] text-amber-500/60 uppercase">Auto-scaled ratio</span>
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="text-2xl font-light text-white font-mono tracking-tighter">{formatTime(activeTotalTime)}</span>
                                                 </div>
                                             </div>
                                             <div className="px-2">
-                                                <input type="range" min="120" max="330" step="5" value={customTotalTime === 0 ? activeTotalTime : customTotalTime} onChange={(e) => setCustomTotalTime(Number(e.target.value))} className="accent-white" />
+                                                {/* v3.68: Range min/max dynamically updates based on mode */}
+                                                <input type="range" min={minBrewTime} max={maxBrewTime} step="5" value={customTotalTime === 0 ? activeTotalTime : customTotalTime} onChange={(e) => setCustomTotalTime(Number(e.target.value))} className="accent-white" />
                                             </div>
                                             <div className="grid grid-cols-3 items-center text-[10px] text-white/20 font-mono px-1">
-                                                <span className="text-left whitespace-nowrap">Fast (2m)</span>
+                                                <span className="text-left whitespace-nowrap uppercase tracking-wider">Fast</span>
                                                 <button onClick={() => setCustomTotalTime(0)} className="text-center text-amber-500/50 hover:text-amber-500 transition-colors font-bold uppercase tracking-wider whitespace-nowrap">Reset to Recommend</button>
-                                                <span className="text-right whitespace-nowrap">Slow (5m 30s)</span>
+                                                <span className="text-right whitespace-nowrap uppercase tracking-wider">Slow</span>
                                             </div>
                                         </div>
                                     )}
                                 </section>
 
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.63</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.68</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
@@ -447,19 +451,16 @@
                             <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] font-medium mb-1">Total Time</p>
                             <span className="text-2xl font-light text-white text-glow tabular-nums">{formatTime(timer)}</span>
                         </div>
-                        <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 z-30">
-                            {soundEnabled ? <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase> : <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" x2="17" y1="9" y2="15" /><line x1="17" x2="23" y1="9" y2="15" /></IconBase>}
-                        </button>
+                        <div className="w-10 h-10"></div>
                     </header>
 
                     <main className="h-full w-full flex flex-col items-center justify-center z-10 relative px-6">
                         {isObserving ? (
-                            /* v3.63: Re-centered the vertical alignment to justify-center */
-                            <div className="flex-1 flex flex-col items-center justify-center p-8 w-full animate-in fade-in duration-700">
+                            <div className="flex-1 flex flex-col items-center justify-center pb-24 p-8 w-full animate-in fade-in duration-700">
                                 <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-6">
                                     <IconBase size={40} className="text-emerald-500"><path d="M17 8h1a4 4 0 0 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="8" /><line x1="10" x2="10" y1="2" y2="8" /><line x1="14" x2="14" y1="2" y2="8" /></IconBase>
                                 </div>
-                                <h2 className="text-4xl font-light text-white mb-2 text-glow">Enjoy Your Brew</h2>
+                                <h2 className="text-4xl font-light text-white mb-2 text-glow text-center">Enjoy Your Brew</h2>
                                 <p className="text-white/40 text-sm uppercase tracking-widest mb-10 font-medium text-center">Brew Completed</p>
                                 <div className="glass-panel px-10 py-6 rounded-3xl text-center">
                                     <span className="block text-xs text-white/40 uppercase mb-1 tracking-widest">Final Water</span>
