@@ -55,38 +55,39 @@
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 2px;
         }
 
-        input[type=range].slider-ratio::-webkit-slider-thumb {
-            background: #ffffff; 
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.8);
-        }
-        
+        /* v3.52: 半透明優化 - 移除 blur 以省電，但調低 alpha 值增加透明感 */
         .glass-panel {
-            background: rgba(25, 25, 25, 0.6);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(20, 20, 20, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
         .glass-button {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s ease;
         }
         .glass-button:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
         .glass-button.active {
             background: rgba(245, 158, 11, 0.2); 
-            border-color: rgba(245, 158, 11, 0.5);
+            border-color: rgba(245, 158, 11, 0.4);
             color: #fbbf24;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
         }
 
-        .text-glow { text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        /* 呼吸特效動畫 */
+        @keyframes breathe {
+            0%, 100% { opacity: 0.4; transform: scale(0.98); }
+            50% { opacity: 0.9; transform: scale(1.02); }
+        }
+        .animate-breathe {
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        .text-glow { text-shadow: 0 0 25px rgba(255,255,255,0.4); }
+        .text-glow-go { text-shadow: 0 0 35px rgba(236, 72, 153, 0.6); }
     </style>
 </head>
 <body>
@@ -100,19 +101,18 @@
         );
 
         const AppLogo = ({ size = 42 }) => (
-            <div className="rounded-full flex items-center justify-center border border-white/10 relative overflow-hidden" style={{ width: size, height: size, backgroundColor: 'rgba(255, 255, 255, 0.05)', boxShadow: '0 0 15px rgba(245, 158, 11, 0.15)' }}>
+            <div className="rounded-full flex items-center justify-center border border-white/10 relative overflow-hidden" style={{ width: size, height: size, backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
                 <svg width={size*0.6} height={size*0.6} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500 relative z-10">
                     <path d="M4 6h16l-8 16L4 6z" strokeWidth="1.5" />
                     <path d="M4 6h16" strokeWidth="1.5" />
                     <circle cx="12" cy="14" r="2" fill="currentColor" className="animate-pulse" />
                 </svg>
-                <div className="absolute inset-0 z-0" style={{ background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)' }}></div>
             </div>
         );
 
         const TargetWeightDisplay = ({ value, label = "Target Weight" }) => (
-            <div className="flex flex-col items-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2 text-shadow-sm">{label}</p>
+            <div className="flex flex-col items-center gap-1">
+                <p className="text-amber-500/80 text-xs font-bold uppercase tracking-[0.3em] mb-2">{label}</p>
                 <div className="flex items-baseline justify-center gap-2">
                     <span className="text-6xl font-light text-white text-glow">{value}</span>
                     <span className="text-2xl text-white/40 font-light">g</span>
@@ -120,8 +120,33 @@
             </div>
         );
 
-        const SegmentedTimer = ({ steps, currentStepIndex, remainingTimeInStep, currentStepDuration, size = 280, children, isFinished }) => {
-            if (isFinished) return <div style={{ width: size, height: size }} className="flex items-center justify-center">{children}</div>;
+        // v3.52: 靜態色彩背景 - 還原 v3.8 經典色調布局
+        const BackgroundEffect = ({ mode }) => {
+            const getColors = () => {
+                switch(mode) {
+                    case 'go': 
+                        return { p: 'rgba(236, 72, 153, 0.25)', s: 'rgba(30, 58, 138, 0.3)', a: 'rgba(139, 92, 246, 0.15)' };
+                    case 'countdown': 
+                        return { p: 'rgba(6, 182, 212, 0.25)', s: 'rgba(15, 23, 42, 0.4)', a: 'rgba(2, 132, 199, 0.1)' };
+                    case 'observing': 
+                        return { p: 'rgba(16, 185, 129, 0.25)', s: 'rgba(20, 83, 45, 0.3)', a: 'rgba(101, 163, 13, 0.1)' };
+                    case 'brewing': 
+                        return { p: 'rgba(249, 115, 22, 0.25)', s: 'rgba(67, 20, 7, 0.3)', a: 'rgba(251, 146, 60, 0.1)' };
+                    default: 
+                        return { p: 'rgba(245, 158, 11, 0.22)', s: 'rgba(30, 58, 138, 0.22)', a: 'rgba(147, 51, 234, 0.15)' };
+                }
+            };
+            const c = getColors();
+            return (
+                <div className="absolute inset-0 z-0 pointer-events-none bg-black transition-all duration-700">
+                    <div className="absolute top-[-10%] left-[-10%] w-full h-full" style={{ background: `radial-gradient(circle at 20% 20%, ${c.p} 0%, transparent 60%)` }} />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-full h-full" style={{ background: `radial-gradient(circle at 80% 80%, ${c.s} 0%, transparent 55%)` }} />
+                    <div className="absolute top-[30%] left-[5%] w-full h-full opacity-60" style={{ background: `radial-gradient(circle at 30% 50%, ${c.a} 0%, transparent 50%)` }} />
+                </div>
+            );
+        };
+
+        const SegmentedTimer = ({ steps, currentStepIndex, remainingTimeInStep, currentStepDuration, size = 280, children }) => {
             const strokeWidth = 10;
             const radius = (size - strokeWidth) / 2;
             const circumference = radius * 2 * Math.PI;
@@ -141,35 +166,15 @@
                             const dashArray = `${segmentLength} ${circumference - segmentLength}`;
                             return (
                                 <g key={index} transform={`rotate(${rotation} ${size/2} ${size/2})`}>
-                                    <circle cx={size / 2} cy={size / 2} r={radius} fill="transparent" stroke={isFuture ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.9)"} strokeWidth={strokeWidth} strokeDasharray={dashArray} strokeDashoffset={0} strokeLinecap="round" style={{ transition: 'stroke 1.5s ease-in-out' }} />
+                                    <circle cx={size / 2} cy={size / 2} r={radius} fill="transparent" stroke={isFuture ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.8)"} strokeWidth={strokeWidth} strokeDasharray={dashArray} strokeDashoffset={0} strokeLinecap="round" />
                                     {(isActive || isPast) && (
-                                        <circle cx={size / 2} cy={size / 2} r={radius} fill="transparent" stroke="#f59e0b" strokeWidth={strokeWidth} strokeDasharray={`${segmentLength * progress} ${circumference - (segmentLength * progress)}`} strokeDashoffset={0} strokeLinecap="round" style={{ transition: isActive ? 'stroke-dasharray 1s linear' : 'none', filter: 'drop-shadow(0 0 8px rgba(245, 158, 11, 0.6))' }} />
+                                        <circle cx={size / 2} cy={size / 2} r={radius} fill="transparent" stroke="#f59e0b" strokeWidth={strokeWidth} strokeDasharray={`${segmentLength * progress} ${circumference - (segmentLength * progress)}`} strokeDashoffset={0} strokeLinecap="round" style={{ filter: 'drop-shadow(0 0 5px rgba(245, 158, 11, 0.4))' }} />
                                     )}
                                 </g>
                             );
                         })}
                     </svg>
                     <div className="relative z-10 flex flex-col items-center justify-center">{children}</div>
-                </div>
-            );
-        };
-
-        const BackgroundEffect = ({ color }) => {
-            const getColorValue = (c) => {
-                if (!c) return 'rgba(245, 158, 11, 0.2)';
-                if (c.includes('amber-500')) return 'rgba(245, 158, 11, 0.4)';
-                if (c.includes('cyan-500')) return 'rgba(6, 182, 212, 0.4)';
-                if (c.includes('amber-800')) return 'rgba(146, 64, 14, 0.3)';
-                if (c.includes('orange-600')) return 'rgba(234, 88, 12, 0.3)';
-                if (c.includes('green-600')) return 'rgba(22, 163, 74, 0.3)';
-                return 'rgba(245, 158, 11, 0.2)';
-            };
-            const mainColor = getColorValue(color);
-            return (
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-black">
-                    <div className="absolute inset-0 transition-all duration-1000 ease-in-out" style={{ background: `radial-gradient(circle at 20% 20%, ${mainColor}, transparent 60%)` }}></div>
-                    <div className="absolute inset-0" style={{ background: `radial-gradient(circle at 80% 80%, rgba(30, 58, 138, 0.2), transparent 50%)` }}></div>
-                    <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay" style={{backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E\")"}}></div>
                 </div>
             );
         };
@@ -196,7 +201,6 @@
 
             const getSteps = () => {
                 let steps = [];
-                // v3.32 Vibrant mode logic
                 if (flavor === 'vibrant') {
                     const unit = totalWater / 300;
                     steps.push({ weight: 30 * unit, cumulative: 30 * unit, text: "Bloom", duration: 40 });
@@ -206,8 +210,6 @@
                     steps.push({ weight: 50 * unit, cumulative: 300 * unit, text: "Balance 2", duration: 30 });
                     return steps;
                 }
-
-                // Standard 4:6 Logic
                 const p1Total = totalWater * 0.4;
                 const p2Total = totalWater * 0.6;
                 let s1, s2;
@@ -218,13 +220,12 @@
                 steps.push({ weight: s1, cumulative: s1, text: "Bloom", duration: 45 });
                 steps.push({ weight: s2, cumulative: s1 + s2, text: "Flavor", duration: 45 });
 
-                const strengthDurations = [40, 30, 50];
                 const strengthCount = strength === 'strong' ? 3 : 2;
                 const perStep = p2Total / strengthCount;
                 let cum = s1 + s2;
                 for (let i = 0; i < strengthCount; i++) {
                     cum += perStep;
-                    steps.push({ weight: perStep, cumulative: cum, text: `Strength ${i+1}`, duration: strengthDurations[i] || 30 });
+                    steps.push({ weight: perStep, cumulative: cum, text: `Strength ${i+1}`, duration: 45 });
                 }
                 return steps;
             };
@@ -236,32 +237,23 @@
 
             useEffect(() => {
                 if (isBrewing || isObserving) {
-                    if (Math.abs(timer - 0.5) < 0.01) {
-                         const id = setTimeout(() => {
-                            setTimer(1); 
-                            intervalRef.current = setInterval(() => setTimer(t => t + 1), 1000);
-                        }, 500); 
-                        return () => { clearTimeout(id); clearInterval(intervalRef.current); };
-                    } else {
-                        intervalRef.current = setInterval(() => setTimer(prev => prev + 1), 1000);
-                        return () => clearInterval(intervalRef.current);
-                    }
+                    intervalRef.current = setInterval(() => setTimer(prev => prev + 1), 1000);
+                    return () => clearInterval(intervalRef.current);
                 }
             }, [isBrewing, isObserving]);
 
             useEffect(() => {
                 if (!isBrewing) return;
                 let stepEndTime = currentStepStartTime + currentStep.duration;
-                let timeRemaining = stepEndTime - timer;
-                if (timer > 0 && timeRemaining <= 3 && timeRemaining >= 1) playBeep('tick');
+                if (timer > 0 && stepEndTime - timer <= 3 && stepEndTime - timer >= 1) playBeep('tick');
                 if (timer >= stepEndTime) {
                     if (currentStepIndex < steps.length - 1) {
                         playBeep('start');
                         setCurrentStepIndex(prev => prev + 1);
                     } else {
                         setIsBrewing(false);
-                        setIsObserving(true); 
-                        playSuccessSound(); 
+                        setIsObserving(true);
+                        playSuccessSound();
                     }
                 }
             }, [timer, isBrewing]);
@@ -283,24 +275,23 @@
 
             const handleStart = () => { initAudio(); setCountdown(3); };
             const handleReset = () => { setIsBrewing(false); setIsObserving(false); setTimer(0); setCurrentStepIndex(0); setCountdown(null); };
-            const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
-            const handleBeansSubmit = () => { let val = Number(tempBeans); if (!isNaN(val) && val >= 10 && val <= 40) setBeans(Math.round(val)); setIsEditingBeans(false); };
+            const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
             useEffect(() => {
                 if (countdown === null) return;
                 if (countdown > 0) { playBeep('tick'); const t = setTimeout(() => setCountdown(countdown - 1), 1000); return () => clearTimeout(t); }
-                else { playBeep('start'); const t = setTimeout(() => { setCountdown(null); setTimer(0.5); setIsBrewing(true); }, 1000); return () => clearTimeout(t); }
+                else { playBeep('start'); const t = setTimeout(() => { setCountdown(null); setIsBrewing(true); setTimer(1); }, 1000); return () => clearTimeout(t); }
             }, [countdown]);
 
             if (countdown !== null) {
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
-                        <BackgroundEffect color={countdown === 0 ? "bg-amber-500" : "bg-cyan-500"} />
+                        <BackgroundEffect mode={countdown === 0 ? "go" : "countdown"} />
                         <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
-                             <h1 className={`text-[12rem] font-extralight leading-none transition-all duration-300 tabular-nums text-center w-full ${countdown === 0 ? 'scale-110 text-white text-glow' : 'text-white/90'}`}>{countdown === 0 ? "GO" : countdown}</h1>
+                             <h1 className={`text-[12rem] font-extralight leading-none tabular-nums text-center w-full text-white ${countdown === 0 ? 'text-glow-go scale-110' : 'text-glow'}`}>{countdown === 0 ? "GO" : countdown}</h1>
                         </div>
                         <div className="absolute top-[47%] left-0 right-0 flex flex-col items-center">
-                             <div className="mb-9 h-7 flex items-center justify-center"><p className="text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse whitespace-nowrap text-center">{countdown === 0 ? "START BREW" : "READY"}</p></div>
+                             <div className="mb-9 h-7 flex items-center justify-center text-xl tracking-[0.5em] uppercase text-white/60 animate-pulse font-medium">{countdown === 0 ? "START BREW" : "READY"}</div>
                              <TargetWeightDisplay value={Math.round(steps[0].cumulative)} />
                         </div>
                     </div>
@@ -310,27 +301,20 @@
             if (!isBrewing && !isObserving && timer === 0) {
                 return (
                     <div className="h-screen w-full flex flex-col relative overflow-hidden">
-                        <BackgroundEffect color="bg-amber-800" />
+                        <BackgroundEffect mode="idle" />
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
-                                <div className="flex items-center gap-3">
-                                    <AppLogo size={42} />
-                                    <div>
-                                        <h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
-                                        {/* v3.32: Reverted "2025 Formula" to "Tetsu Kasuya" */}
-                                        <p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p>
-                                    </div>
-                                </div>
-                                <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60">
-                                    {soundEnabled ? <IconBase size={18} viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase> : <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" x2="17" y1="9" y2="15" /><line x1="17" x2="23" y1="9" y2="15" /></IconBase>}
+                                <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">4:6 Method</h1><p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p></div></div>
+                                <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center">
+                                    {soundEnabled ? <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase> : <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" x2="17" y1="9" y2="15" /><line x1="17" x2="23" y1="9" y2="15" /></IconBase>}
                                 </button>
                             </header>
 
                             <main className="px-6 pb-48 space-y-6 pt-0">
-                                <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden group">
+                                <section className="glass-panel rounded-[2rem] p-8 text-center relative overflow-hidden">
                                     <h2 className="text-sm uppercase tracking-widest text-amber-500/80 mb-6 font-medium">Coffee Beans</h2>
                                     <div className="relative h-32 flex items-center justify-center" onClick={() => { setIsEditingBeans(true); setTempBeans(beans); }}>
-                                        {isEditingBeans ? <input ref={beansInputRef} type="number" value={tempBeans} onChange={(e) => setTempBeans(e.target.value)} onBlur={handleBeansSubmit} autoFocus className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50" /> : <div><span className="text-8xl font-thin text-white text-glow">{beans}</span><span className="text-2xl text-white/40 font-light ml-2">g</span></div>}
+                                        {isEditingBeans ? <input ref={beansInputRef} type="number" value={tempBeans} onChange={(e) => setTempBeans(e.target.value)} onBlur={() => { setBeans(Number(tempBeans)); setIsEditingBeans(false); }} autoFocus className="w-40 bg-transparent text-center text-8xl font-thin text-white outline-none border-b border-amber-500/50" /> : <div><span className="text-8xl font-thin text-white text-glow">{beans}</span><span className="text-2xl text-white/40 font-light ml-2">g</span></div>}
                                     </div>
                                     <div className="mt-6 px-4"><input type="range" min="10" max="40" step="1" value={beans} onChange={(e) => setBeans(Number(e.target.value))} className="accent-amber-500" /></div>
                                 </section>
@@ -338,11 +322,20 @@
                                 <section className="space-y-3">
                                     <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor (Phase 1)</label>
                                     <div className="grid grid-cols-4 gap-2">
-                                        {[{id: 'sweet', label: 'Sweet'}, {id: 'acidic', label: 'Acidic'}, {id: 'balanced', label: 'Balance'}, {id: 'vibrant', label: 'Vibrant'}].map(opt => (
-                                            <button key={opt.id} onClick={() => setFlavor(opt.id)} className={`glass-button rounded-xl py-4 text-[13px] font-medium transition-all ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
+                                        {[
+                                            {id: 'sweet', label: 'Sweet'}, 
+                                            {id: 'balanced', label: 'Balance'}, 
+                                            {id: 'acidic', label: 'Acidic'}, 
+                                            {id: 'vibrant', label: 'Vibrant'}
+                                        ].map(opt => (
+                                            <button key={opt.id} onClick={() => setFlavor(opt.id)} className={`glass-button rounded-xl py-4 text-[13px] font-medium ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
                                         ))}
                                     </div>
-                                    {flavor === 'vibrant' && <p className="text-[10px] text-amber-500/60 uppercase tracking-widest text-center animate-pulse">Enhanced Acidity & Sweetness Mode</p>}
+                                    {flavor === 'vibrant' && (
+                                        <p className="text-[10px] text-amber-500/90 uppercase tracking-[0.2em] text-center mt-3 animate-breathe font-bold">
+                                            Enhanced Acidity & Sweetness Mode
+                                        </p>
+                                    )}
                                 </section>
 
                                 {flavor !== 'vibrant' && (
@@ -356,56 +349,33 @@
                                     </section>
                                 )}
 
-                                <section className="glass-panel rounded-[2rem] p-6 space-y-3">
+                                <section className="glass-panel rounded-[2rem] p-6 space-y-3 overflow-hidden">
                                     <div className="flex justify-between items-center border-b border-white/10 pb-2">
                                         <h3 className="text-xs uppercase tracking-widest text-white/40 font-medium">Brew Plan</h3>
-                                        <div className="flex gap-4 text-[10px] uppercase text-white/30">
-                                            <span className="w-8 text-right">Time</span>
-                                            <span className="w-8 text-right">Water</span>
-                                        </div>
+                                        <div className="flex gap-4 text-[10px] uppercase text-white/30"><span className="w-8 text-right">Time</span><span className="w-8 text-right">Water</span></div>
                                     </div>
                                     {steps.map((s, i) => (
-                                        <div key={i} className="flex justify-between items-center text-sm border-b border-white/5 last:border-0 pb-2 h-10">
-                                            <div className="flex gap-2 font-mono items-center">
-                                                <span className="text-amber-500/80">{i+1}</span>
-                                                <span className="text-white/80">{s.text}</span>
-                                            </div>
-                                            <div className="flex gap-4 font-mono items-center">
-                                                <span className="text-white/40 text-xs w-8 text-right">{s.duration}s</span>
-                                                <span className="text-white font-medium w-8 text-right">{Math.round(s.weight)}g</span>
-                                            </div>
+                                        <div key={i} className="flex justify-between items-center text-sm border-b border-white/5 last:border-0 pb-2 h-10 px-1">
+                                            <div className="flex gap-2 font-mono items-center"><span className="text-amber-500/80">{i+1}</span><span className="text-white/80">{s.text}</span></div>
+                                            <div className="flex gap-4 font-mono items-center"><span className="text-white/40 text-xs w-8 text-right">{s.duration}s</span><span className="text-white font-medium w-8 text-right">{Math.round(s.weight)}g</span></div>
                                         </div>
                                     ))}
                                 </section>
-                                
-                                <section className="space-y-3 pt-2">
-                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2">
-                                        <IconBase size={14}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" /></IconBase>
-                                        <span className="font-medium tracking-wide">Temp Guide</span>
-                                    </div>
+
+                                <section className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2"><IconBase size={14}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" /></IconBase><span className="font-medium">Temp Guide</span></div>
                                     <div className="grid grid-cols-3 gap-3">
-                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase mb-1">Light</span>
-                                            <span className="text-sm font-mono text-white/90">93°C</span>
-                                        </div>
-                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase mb-1">Medium</span>
-                                            <span className="text-sm font-mono text-white/90">88°C</span>
-                                        </div>
-                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
-                                            <span className="text-[10px] text-white/40 uppercase mb-1">Dark</span>
-                                            <span className="text-sm font-mono text-white/90">83°C</span>
-                                        </div>
+                                        <div className="glass-panel bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Light</span><span className="text-sm font-mono text-white/90">93°C</span></div>
+                                        <div className="glass-panel bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Medium</span><span className="text-sm font-mono text-white/90">88°C</span></div>
+                                        <div className="glass-panel bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5"><span className="text-[10px] text-white/40 uppercase mb-1">Dark</span><span className="text-sm font-mono text-white/90">83°C</span></div>
                                     </div>
                                 </section>
-                                
-                                <div className="w-full flex justify-end py-4 pr-2">
-                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.32</p>
-                                </div>
+
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.52</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
-                            <button onClick={handleStart} className="pointer-events-auto px-10 py-5 bg-amber-900/20 text-amber-500 rounded-full flex items-center gap-3 border border-amber-500/50 backdrop-blur-xl active:scale-95 transition-all">
+                            <button onClick={handleStart} className="pointer-events-auto px-10 py-5 bg-amber-900/40 text-amber-500 rounded-full flex items-center gap-3 border border-amber-500/50 active:scale-95 transition-all">
                                 <IconBase size={24}><polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/></IconBase>
                                 <span className="text-lg font-bold tracking-wide">START BREW</span>
                             </button>
@@ -416,7 +386,7 @@
 
             return (
                 <div className="h-screen w-full flex flex-col relative overflow-hidden">
-                    <BackgroundEffect color={isObserving ? "bg-green-600" : "bg-orange-600"} />
+                    <BackgroundEffect mode={isObserving ? "observing" : "brewing"} />
                     <header className="absolute top-0 left-0 right-0 pt-14 pb-2 px-6 flex justify-between items-center z-20">
                         <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white z-30">
                             {isObserving ? <IconBase size={20}><path d="M18 6 6 18" /><path d="m6 6 12 12" /></IconBase> : <IconBase size={18}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></IconBase>}
@@ -432,12 +402,12 @@
 
                     <main className="h-full w-full flex flex-col items-center justify-center z-10 relative">
                         {isObserving ? (
-                            <div className="flex flex-col items-center animate-in fade-in duration-700 -mt-24">
+                            <div className="flex-1 flex flex-col items-center justify-start pt-32 p-8 w-full animate-in fade-in duration-700">
                                 <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-6">
                                     <IconBase size={40} className="text-emerald-500"><path d="M17 8h1a4 4 0 0 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="8" /><line x1="10" x2="10" y1="2" y2="8" /><line x1="14" x2="14" y1="2" y2="8" /></IconBase>
                                 </div>
-                                <h2 className="text-4xl font-light text-white mb-2">Enjoy Your Brew</h2>
-                                <p className="text-white/40 text-sm uppercase tracking-widest mb-10">Observation Stage</p>
+                                <h2 className="text-4xl font-light text-white mb-2 text-glow">Enjoy Your Brew</h2>
+                                <p className="text-white/40 text-sm uppercase tracking-widest mb-10 font-medium">Observation Stage</p>
                                 <div className="glass-panel px-10 py-6 rounded-3xl text-center">
                                     <span className="block text-xs text-white/40 uppercase mb-1">Final Water</span>
                                     <span className="text-5xl font-thin text-white">{Math.round(totalWater)}<span className="text-xl text-white/40 ml-1">ml</span></span>
@@ -448,7 +418,7 @@
                                 <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
                                     <SegmentedTimer steps={steps} currentStepIndex={currentStepIndex} remainingTimeInStep={remainingTimeInStep} currentStepDuration={currentStep.duration}>
                                         <div className="flex flex-col items-center">
-                                            <h1 className="text-9xl font-thin tabular-nums text-white text-glow leading-none">{Math.ceil(remainingTimeInStep)}</h1>
+                                            <h1 className="text-9xl font-thin tabular-nums text-white text-glow leading-none tracking-tighter">{Math.ceil(remainingTimeInStep)}</h1>
                                             <p className="text-white/40 text-xs font-mono tracking-[0.5em] mt-2 uppercase">{currentStep.text}</p>
                                         </div>
                                     </SegmentedTimer>
@@ -457,10 +427,9 @@
                                     <div className="mb-9 h-7"></div>
                                     <TargetWeightDisplay value={Math.round(currentStep.cumulative)} />
                                     {currentStepIndex < steps.length - 1 && (
-                                        <div className="mt-8 px-4 py-2 bg-white/5 rounded-full border border-white/5 backdrop-blur-sm flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2">
-                                            <span className="text-white/40 text-[10px] uppercase tracking-wider">Next</span>
-                                            <span className="text-white/80 text-sm font-mono">{Math.round(steps[currentStepIndex+1].cumulative)}</span>
-                                            <span className="text-white/40 text-[10px] font-mono">g</span>
+                                        <div className="mt-8 px-4 py-2 bg-white/5 rounded-full border border-white/5 flex items-center animate-in fade-in slide-in-from-bottom-2">
+                                            <span className="text-white/40 text-[10px] uppercase tracking-wider mr-2">Next</span>
+                                            <div className="flex items-baseline gap-2"><span className="text-white/80 text-sm font-mono">{Math.round(steps[currentStepIndex+1].cumulative)}</span><span className="text-white/40 text-[10px] font-mono">g</span></div>
                                         </div>
                                     )}
                                 </div>
