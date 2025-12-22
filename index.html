@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -423,7 +423,7 @@
                                     )}
                                 </section>
 
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.62</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase">3.63</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
@@ -454,16 +454,20 @@
 
                     <main className="h-full w-full flex flex-col items-center justify-center z-10 relative px-6">
                         {isObserving ? (
-                            <div className="flex-1 flex flex-col items-center justify-start pt-32 p-8 w-full animate-in fade-in duration-700">
+                            /* v3.63: Re-centered the vertical alignment to justify-center */
+                            <div className="flex-1 flex flex-col items-center justify-center p-8 w-full animate-in fade-in duration-700">
                                 <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-6">
                                     <IconBase size={40} className="text-emerald-500"><path d="M17 8h1a4 4 0 0 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="8" /><line x1="10" x2="10" y1="2" y2="8" /><line x1="14" x2="14" y1="2" y2="8" /></IconBase>
                                 </div>
                                 <h2 className="text-4xl font-light text-white mb-2 text-glow">Enjoy Your Brew</h2>
-                                <p className="text-white/40 text-sm uppercase tracking-widest mb-10 font-medium">Observation Stage</p>
+                                <p className="text-white/40 text-sm uppercase tracking-widest mb-10 font-medium text-center">Brew Completed</p>
                                 <div className="glass-panel px-10 py-6 rounded-3xl text-center">
                                     <span className="block text-xs text-white/40 uppercase mb-1 tracking-widest">Final Water</span>
                                     <span className="text-5xl font-thin text-white">{Math.round(totalWater)}<span className="text-xl text-white/40 ml-1">ml</span></span>
                                 </div>
+                                <button onClick={handleReset} className="mt-12 text-white/30 text-xs hover:text-white transition-colors uppercase tracking-[0.3em] border-b border-transparent hover:border-white/20 pb-1">
+                                    Brew Again
+                                </button>
                             </div>
                         ) : (
                             <>
