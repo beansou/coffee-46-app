@@ -174,8 +174,6 @@
             );
         };
 
-        const GO_SCREEN_HOLD_DURATION_MS = 1000;
-
         const App = () => {
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
@@ -188,11 +186,9 @@
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [countdown, setCountdown] = useState(null);
             const [isEditingBeans, setIsEditingBeans] = useState(false);
-            const [isEditingRatio, setIsEditingRatio] = useState(false); 
             const [tempBeans, setTempBeans] = useState(20);
             
             const beansInputRef = useRef(null);
-            const ratioControlRef = useRef(null);
             const intervalRef = useRef(null);
             const audioCtxRef = useRef(null);
 
@@ -200,8 +196,7 @@
 
             const getSteps = () => {
                 let steps = [];
-                
-                // --- v3.30: Vibrant Mode (30/70/100/50/50) with specific labels ---
+                // v3.32 Vibrant mode logic
                 if (flavor === 'vibrant') {
                     const unit = totalWater / 300;
                     steps.push({ weight: 30 * unit, cumulative: 30 * unit, text: "Bloom", duration: 40 });
@@ -212,7 +207,7 @@
                     return steps;
                 }
 
-                // --- Standard 4:6 Logic ---
+                // Standard 4:6 Logic
                 const p1Total = totalWater * 0.4;
                 const p2Total = totalWater * 0.6;
                 let s1, s2;
@@ -318,7 +313,14 @@
                         <BackgroundEffect color="bg-amber-800" />
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
-                                <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">4:6 Method</h1><p className="text-xs text-white/40 uppercase tracking-widest">2025 Formula</p></div></div>
+                                <div className="flex items-center gap-3">
+                                    <AppLogo size={42} />
+                                    <div>
+                                        <h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
+                                        {/* v3.32: Reverted "2025 Formula" to "Tetsu Kasuya" */}
+                                        <p className="text-xs text-white/40 uppercase tracking-widest">Tetsu Kasuya</p>
+                                    </div>
+                                </div>
                                 <button onClick={() => setSoundEnabled(!soundEnabled)} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60">
                                     {soundEnabled ? <IconBase size={18} viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase> : <IconBase size={18}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" x2="17" y1="9" y2="15" /><line x1="17" x2="23" y1="9" y2="15" /></IconBase>}
                                 </button>
@@ -334,8 +336,7 @@
                                 </section>
 
                                 <section className="space-y-3">
-                                    <label className="text-sm text-white/60 ml-2">Flavor (Phase 1)</label>
-                                    {/* v3.30: Single row for all 4 options */}
+                                    <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor (Phase 1)</label>
                                     <div className="grid grid-cols-4 gap-2">
                                         {[{id: 'sweet', label: 'Sweet'}, {id: 'acidic', label: 'Acidic'}, {id: 'balanced', label: 'Balance'}, {id: 'vibrant', label: 'Vibrant'}].map(opt => (
                                             <button key={opt.id} onClick={() => setFlavor(opt.id)} className={`glass-button rounded-xl py-4 text-[13px] font-medium transition-all ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
@@ -346,10 +347,10 @@
 
                                 {flavor !== 'vibrant' && (
                                     <section className="space-y-3 animate-in fade-in duration-500">
-                                        <label className="text-sm text-white/60 ml-2">Strength (Phase 2)</label>
+                                        <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Strength (Phase 2)</label>
                                         <div className="grid grid-cols-2 gap-3">
-                                            {[{id: 'standard', label: 'Clean', desc: '2 Pours'}, {id: 'strong', label: 'Strong', desc: '3 Pours'}].map(opt => (
-                                                <button key={opt.id} onClick={() => setStrength(opt.id)} className={`glass-button rounded-2xl py-4 flex flex-col items-center ${strength === opt.id ? 'active' : ''}`}><span className="text-sm font-medium">{opt.label}</span><span className="text-[10px] opacity-60">{opt.desc}</span></button>
+                                            {[{id: 'standard', label: 'Clean'}, {id: 'strong', label: 'Strong'}].map(opt => (
+                                                <button key={opt.id} onClick={() => setStrength(opt.id)} className={`glass-button rounded-2xl py-5 flex items-center justify-center ${strength === opt.id ? 'active' : ''}`}><span className="text-sm font-medium tracking-wider">{opt.label}</span></button>
                                             ))}
                                         </div>
                                     </section>
@@ -377,8 +378,29 @@
                                     ))}
                                 </section>
                                 
+                                <section className="space-y-3 pt-2">
+                                    <div className="flex items-center gap-2 text-sm text-white/60 ml-2">
+                                        <IconBase size={14}><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z" /></IconBase>
+                                        <span className="font-medium tracking-wide">Temp Guide</span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase mb-1">Light</span>
+                                            <span className="text-sm font-mono text-white/90">93°C</span>
+                                        </div>
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase mb-1">Medium</span>
+                                            <span className="text-sm font-mono text-white/90">88°C</span>
+                                        </div>
+                                        <div className="bg-white/5 rounded-2xl py-3 flex flex-col items-center justify-center border border-white/5">
+                                            <span className="text-[10px] text-white/40 uppercase mb-1">Dark</span>
+                                            <span className="text-sm font-mono text-white/90">83°C</span>
+                                        </div>
+                                    </div>
+                                </section>
+                                
                                 <div className="w-full flex justify-end py-4 pr-2">
-                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.30</p>
+                                    <p className="text-[10px] text-white/40 font-mono tracking-widest hover:text-white/60 transition-colors">v3.32</p>
                                 </div>
                             </main>
                         </div>
