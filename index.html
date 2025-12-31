@@ -65,18 +65,18 @@
             margin-top: -7px;
         }
 
-        /* 數字輸入框樣式優化 */
         input[type=number] {
             -moz-appearance: textfield;
             background: transparent;
             border: 1px solid transparent;
             border-radius: 4px;
             color: inherit;
-            text-align: right;
+            text-align: center;
             transition: all 0.2s;
             padding: 0;
             margin: 0;
             outline: none;
+            font-variant-numeric: tabular-nums;
         }
         input[type=number]:focus {
             border-bottom: 1px solid rgba(245, 158, 11, 0.5);
@@ -435,10 +435,10 @@
                                     <div className="flex justify-between items-center border-b border-white/10 h-10 px-4">
                                         <h3 className="text-xs uppercase tracking-widest text-white/40 font-medium">Brew Plan</h3>
                                         <div className="flex items-center">
-                                            {/* 欄位標題：設定 w-24 並使用 flex 確保內容居中對齊數據列 */}
-                                            <div className="w-24 flex justify-center"><span className="text-[10px] uppercase text-white/30">Time</span></div>
-                                            <div className="w-24 flex justify-center"><span className="text-[10px] uppercase text-white/30">Water</span></div>
-                                            <div className="w-8"></div>
+                                            {/* 標題欄位：使用 w-20 確保寬度充足，且移除 padding 以便幾何置中 */}
+                                            <div className="w-20 text-center"><span className="text-[10px] uppercase text-white font-medium">Time</span></div>
+                                            <div className="w-20 text-center"><span className="text-[10px] uppercase text-white font-medium">Water</span></div>
+                                            <div className="w-4"></div>
                                         </div>
                                     </div>
                                     {brewSteps.map((s, i) => (
@@ -447,48 +447,48 @@
                                             onClick={() => setActiveEditIndex(activeEditIndex === i ? null : i)}
                                             className={`flex justify-between items-center h-14 px-4 transition-all border-b border-white/5 last:border-0 ${activeEditIndex === i ? 'bg-white/5 rounded-xl border-b-transparent shadow-inner' : ''}`}
                                         >
-                                            {/* 名稱列：確保垂直居中 */}
                                             <div className="flex items-center gap-3 font-mono flex-1">
                                                 <span className="text-amber-500/80 w-4 shrink-0 text-xs">{i+1}</span>
                                                 <span className="text-white text-sm leading-none">{s.text}</span>
                                             </div>
 
-                                            {/* 數據容器列 */}
                                             <div className="flex items-center h-full">
-                                                {/* Time 欄位：w-24 固定寬度，與標題完美居中對應 */}
-                                                <div className="w-24 flex justify-center items-center h-full">
-                                                    <div className="inline-flex items-center justify-center text-white text-sm font-medium h-full w-full">
+                                                {/* Time 欄位：使用平衡佔位符 (w-4) 讓數字絕對置中對齊標題 */}
+                                                <div className="w-20 flex justify-center items-center h-full">
+                                                    <div className="flex items-center justify-center">
+                                                        <span className="w-4"></span> {/* 左側隱形成對佔位符 */}
                                                         <input 
                                                             type="number" 
                                                             value={s.duration} 
                                                             onClick={(e) => e.stopPropagation()}
                                                             onChange={(e) => handleStepChange(i, 'duration', e.target.value)}
-                                                            className="w-10 bg-transparent text-right outline-none text-white focus:text-white"
+                                                            className="w-9 bg-transparent text-center outline-none text-white focus:text-white"
                                                         />
                                                         <span className="w-4 text-left ml-0.5 text-xs text-white">s</span>
                                                     </div>
                                                 </div>
 
-                                                {/* Water 欄位：w-24 固定寬度，與標題完美居中對應 */}
-                                                <div className="w-24 flex justify-center items-center h-full">
-                                                    <div className="inline-flex items-center justify-center text-white text-sm font-medium h-full w-full">
+                                                {/* Water 欄位：同樣使用平衡佔位符 (w-4) */}
+                                                <div className="w-20 flex justify-center items-center h-full">
+                                                    <div className="flex items-center justify-center">
+                                                        <span className="w-4"></span> {/* 左側隱形成對佔位符 */}
                                                         <input 
                                                             type="number" 
                                                             value={Math.round(s.weight)} 
                                                             onClick={(e) => e.stopPropagation()}
                                                             onChange={(e) => handleStepChange(i, 'weight', e.target.value)}
-                                                            className="w-12 bg-transparent text-right outline-none text-white focus:text-amber-500"
+                                                            className="w-9 bg-transparent text-center outline-none text-white focus:text-white"
                                                         />
                                                         <span className="w-4 text-left text-[10px] font-normal text-white ml-0.5">g</span>
                                                     </div>
                                                 </div>
                                                 
-                                                {/* 刪除按鈕空間 */}
-                                                <div className="w-8 flex justify-center items-center h-full">
+                                                {/* 打叉按鈕預留空間 */}
+                                                <div className="w-4 flex justify-end items-center h-full">
                                                     {activeEditIndex === i && (
                                                         <button 
                                                             onClick={(e) => { e.stopPropagation(); handleStepDelete(i); }} 
-                                                            className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-400 animate-in zoom-in fade-in duration-200"
+                                                            className="w-4 h-4 flex items-center justify-center text-red-500 hover:text-red-400 animate-in zoom-in fade-in duration-200"
                                                         >
                                                             <IconBase size={14}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>
                                                         </button>
