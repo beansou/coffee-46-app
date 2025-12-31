@@ -65,7 +65,7 @@
             margin-top: -7px;
         }
 
-        /* Number Input Styling to blend in */
+        /* 數字輸入框樣式優化 */
         input[type=number] {
             -moz-appearance: textfield;
             background: transparent;
@@ -74,9 +74,11 @@
             color: inherit;
             text-align: right;
             transition: all 0.2s;
+            padding: 0;
+            margin: 0;
+            outline: none;
         }
         input[type=number]:focus {
-            outline: none;
             border-bottom: 1px solid rgba(245, 158, 11, 0.5);
             background: rgba(255, 255, 255, 0.05);
         }
@@ -159,7 +161,7 @@
             const circumference = radius * 2 * Math.PI;
             const totalSteps = steps.length;
             const gap = 12;
-            const segmentLength = (circumference / totalSteps) - gap;
+            const segmentLength = totalSteps > 0 ? (circumference / totalSteps) - gap : 0;
 
             return (
                 <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -187,14 +189,13 @@
         };
 
         const App = () => {
-            // Main parameters
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
             const [flavor, setFlavor] = useState('sweet');
             const [strength, setStrength] = useState('strong');
             
-            // State for the brew steps (now editable)
             const [brewSteps, setBrewSteps] = useState([]);
+            const [activeEditIndex, setActiveEditIndex] = useState(null);
 
             const [isBrewing, setIsBrewing] = useState(false);
             const [isObserving, setIsObserving] = useState(false);
@@ -214,10 +215,8 @@
             const intervalRef = useRef(null);
             const audioCtxRef = useRef(null);
 
-            // Calculate target total water (just for reference in UI)
             const targetTotalWater = beans * ratio;
 
-            // Logic to generate default steps based on params
             const generateSteps = useCallback(() => {
                 let steps = [];
                 const factor = targetTotalWater / 300;
@@ -231,16 +230,9 @@
                     steps.push({ weight: 50 * unit, text: "Balance 2", duration: 30 });
                 } else {
                     let p1_1, p1_2;
-                    if (flavor === 'sweet') {
-                        p1_1 = 50 * factor;
-                        p1_2 = 70 * factor;
-                    } else if (flavor === 'balanced') {
-                        p1_1 = 60 * factor;
-                        p1_2 = 60 * factor;
-                    } else { // acidic
-                        p1_1 = 70 * factor;
-                        p1_2 = 50 * factor;
-                    }
+                    if (flavor === 'sweet') { p1_1 = 50 * factor; p1_2 = 70 * factor; }
+                    else if (flavor === 'balanced') { p1_1 = 60 * factor; p1_2 = 60 * factor; }
+                    else { p1_1 = 70 * factor; p1_2 = 50 * factor; }
 
                     steps.push({ weight: p1_1, text: "Bloom", duration: 45 });
                     steps.push({ weight: p1_2, text: "Flavor", duration: 45 });
@@ -262,12 +254,9 @@
                     const scale = customTotalTime / naturalTotal;
                     steps = steps.map(s => ({ ...s, duration: Math.round(s.duration * scale) }));
                 }
-
-                // Assign unique IDs to steps for stable rendering even if order changes (though not strictly needed here)
                 return steps.map((s, i) => ({ ...s, id: i }));
             }, [flavor, strength, targetTotalWater, customTotalTime]);
 
-            // Effect: Regenerate steps when main controls change
             useEffect(() => {
                 const newSteps = generateSteps();
                 setBrewSteps(newSteps);
@@ -281,7 +270,6 @@
                 return () => document.removeEventListener('mousedown', handleClickOutside);
             }, [isEditingRatio]);
 
-            // Compute cumulative weights for brewing logic based on current brewSteps state
             const stepsWithCumulative = (() => {
                 let cum = 0;
                 return brewSteps.map(step => {
@@ -293,7 +281,6 @@
             const activeTotalTime = brewSteps.reduce((acc, s) => acc + s.duration, 0);
             const activeTotalWater = brewSteps.reduce((acc, s) => acc + s.weight, 0);
 
-            // Safe access for current step
             const currentStep = stepsWithCumulative[currentStepIndex] || { duration: 0, text: "", cumulative: 0 };
             const currentStepStartTime = stepsWithCumulative.slice(0, currentStepIndex).reduce((acc, s) => acc + s.duration, 0);
             const remainingTimeInStep = Math.max(0, currentStep.duration - (timer - currentStepStartTime));
@@ -347,7 +334,6 @@
             const handleReset = () => { setIsBrewing(false); setIsObserving(false); setTimer(0); setCurrentStepIndex(0); setCountdown(null); };
             const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
-            // --- Handlers for manual editing ---
             const handleStepChange = (index, field, value) => {
                 const newSteps = [...brewSteps];
                 newSteps[index] = { ...newSteps[index], [field]: Number(value) };
@@ -355,9 +341,10 @@
             };
 
             const handleStepDelete = (index) => {
-                if (brewSteps.length <= 1) return; // Prevent deleting the last step
+                if (brewSteps.length <= 1) return;
                 const newSteps = brewSteps.filter((_, i) => i !== index);
                 setBrewSteps(newSteps);
+                setActiveEditIndex(null);
             };
 
             useEffect(() => {
@@ -398,7 +385,6 @@
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
                                 <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
-                                {/* v4.0 Change: Updated name from Tetsu Kasuya to Capsule One */}
                                 <p className="text-xs text-white/40 uppercase tracking-widest">Capsule One</p></div></div>
                             </header>
 
@@ -445,36 +431,69 @@
                                     </section>
                                 )}
 
-                                <section className="glass-panel rounded-[2rem] p-6 space-y-3 overflow-hidden">
-                                    <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                                <section className="glass-panel rounded-[2rem] p-4 space-y-0 overflow-hidden">
+                                    <div className="flex justify-between items-center border-b border-white/10 h-10 px-4">
                                         <h3 className="text-xs uppercase tracking-widest text-white/40 font-medium">Brew Plan</h3>
-                                        <div className="flex gap-4 text-[10px] uppercase text-white/30"><span className="w-12 text-right">Time</span><span className="w-12 text-right">Water</span><span className="w-4"></span></div>
+                                        <div className="flex items-center">
+                                            {/* 欄位標題：設定 w-24 並使用 flex 確保內容居中對齊數據列 */}
+                                            <div className="w-24 flex justify-center"><span className="text-[10px] uppercase text-white/30">Time</span></div>
+                                            <div className="w-24 flex justify-center"><span className="text-[10px] uppercase text-white/30">Water</span></div>
+                                            <div className="w-8"></div>
+                                        </div>
                                     </div>
                                     {brewSteps.map((s, i) => (
-                                        <div key={i} className="flex justify-between items-center text-sm border-b border-white/5 last:border-0 pb-2 h-10 px-1">
-                                            <div className="flex items-center gap-2 font-mono flex-1"><span className="text-amber-500/80 w-6">{i+1}</span><span className="text-white/80">{s.text}</span></div>
-                                            <div className="flex gap-2 font-mono items-center">
-                                                <div className="flex items-center text-white/40 text-xs w-12 justify-end">
-                                                    <input 
-                                                        type="number" 
-                                                        value={s.duration} 
-                                                        onChange={(e) => handleStepChange(i, 'duration', e.target.value)}
-                                                        className="w-full bg-transparent text-right focus:text-white"
-                                                    />
-                                                    <span>s</span>
+                                        <div 
+                                            key={i} 
+                                            onClick={() => setActiveEditIndex(activeEditIndex === i ? null : i)}
+                                            className={`flex justify-between items-center h-14 px-4 transition-all border-b border-white/5 last:border-0 ${activeEditIndex === i ? 'bg-white/5 rounded-xl border-b-transparent shadow-inner' : ''}`}
+                                        >
+                                            {/* 名稱列：確保垂直居中 */}
+                                            <div className="flex items-center gap-3 font-mono flex-1">
+                                                <span className="text-amber-500/80 w-4 shrink-0 text-xs">{i+1}</span>
+                                                <span className="text-white text-sm leading-none">{s.text}</span>
+                                            </div>
+
+                                            {/* 數據容器列 */}
+                                            <div className="flex items-center h-full">
+                                                {/* Time 欄位：w-24 固定寬度，與標題完美居中對應 */}
+                                                <div className="w-24 flex justify-center items-center h-full">
+                                                    <div className="inline-flex items-center justify-center text-white text-sm font-medium h-full w-full">
+                                                        <input 
+                                                            type="number" 
+                                                            value={s.duration} 
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={(e) => handleStepChange(i, 'duration', e.target.value)}
+                                                            className="w-10 bg-transparent text-right outline-none text-white focus:text-white"
+                                                        />
+                                                        <span className="w-4 text-left ml-0.5 text-xs text-white">s</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center text-white font-medium w-12 justify-end">
-                                                    <input 
-                                                        type="number" 
-                                                        value={Math.round(s.weight)} 
-                                                        onChange={(e) => handleStepChange(i, 'weight', e.target.value)}
-                                                        className="w-full bg-transparent text-right focus:text-amber-500"
-                                                    />
-                                                    <span className="ml-0.5 text-[10px] font-normal text-white/50">g</span>
+
+                                                {/* Water 欄位：w-24 固定寬度，與標題完美居中對應 */}
+                                                <div className="w-24 flex justify-center items-center h-full">
+                                                    <div className="inline-flex items-center justify-center text-white text-sm font-medium h-full w-full">
+                                                        <input 
+                                                            type="number" 
+                                                            value={Math.round(s.weight)} 
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            onChange={(e) => handleStepChange(i, 'weight', e.target.value)}
+                                                            className="w-12 bg-transparent text-right outline-none text-white focus:text-amber-500"
+                                                        />
+                                                        <span className="w-4 text-left text-[10px] font-normal text-white ml-0.5">g</span>
+                                                    </div>
                                                 </div>
-                                                <button onClick={() => handleStepDelete(i)} className="w-6 h-6 flex items-center justify-center text-white/20 hover:text-red-400 transition-colors ml-1">
-                                                    ×
-                                                </button>
+                                                
+                                                {/* 刪除按鈕空間 */}
+                                                <div className="w-8 flex justify-center items-center h-full">
+                                                    {activeEditIndex === i && (
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleStepDelete(i); }} 
+                                                            className="w-6 h-6 flex items-center justify-center text-red-500 hover:text-red-400 animate-in zoom-in fade-in duration-200"
+                                                        >
+                                                            <IconBase size={14}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconBase>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
