@@ -207,7 +207,6 @@
 
             const targetTotalWater = beans * ratio;
 
-            // 基於豆量與風味設定計算基準時間，不隨縮放改變
             const baseTotalTime = useMemo(() => {
                 let baseSteps = [];
                 const factor = targetTotalWater / 300;
@@ -468,19 +467,19 @@
                                     <div className="flex justify-between items-center border-b border-white/10 h-10 px-4">
                                         <h3 className="flex-1 text-xs uppercase tracking-widest text-white/40 font-medium">Brew Plan</h3>
                                         <div className="flex items-center">
-                                            {/* 標題對齊修正：使用與數據行相同的三段結構 */}
-                                            <div className="w-24 flex justify-center">
+                                            {/* 標題 Y 軸對齊關鍵修正：使用 inline-block 強制寬度生效 */}
+                                            <div className="w-24 flex justify-center items-center">
                                                 <div className="flex items-center justify-center w-full">
-                                                    <span className="w-6"></span>
-                                                    <span className="w-10 text-center text-[10px] uppercase text-white font-medium">Time</span>
-                                                    <span className="w-6"></span>
+                                                    <span className="inline-block w-6 shrink-0"></span>
+                                                    <span className="inline-block w-10 text-center text-[10px] uppercase text-white font-medium">Time</span>
+                                                    <span className="inline-block w-6 shrink-0"></span>
                                                 </div>
                                             </div>
-                                            <div className="w-24 flex justify-center">
+                                            <div className="w-24 flex justify-center items-center">
                                                 <div className="flex items-center justify-center w-full">
-                                                    <span className="w-6"></span>
-                                                    <span className="w-10 text-center text-[10px] uppercase text-white font-medium">Water</span>
-                                                    <span className="w-6"></span>
+                                                    <span className="inline-block w-6 shrink-0"></span>
+                                                    <span className="inline-block w-10 text-center text-[10px] uppercase text-white font-medium">Water</span>
+                                                    <span className="inline-block w-6 shrink-0"></span>
                                                 </div>
                                             </div>
                                             <div className="w-4"></div>
@@ -492,15 +491,15 @@
                                             onClick={() => setActiveEditIndex(activeEditIndex === i ? null : i)}
                                             className={`flex justify-between items-center h-14 px-4 transition-all border-b border-white/5 last:border-0 ${activeEditIndex === i ? 'bg-white/5 rounded-xl border-b-transparent shadow-inner' : ''}`}
                                         >
-                                            <div className="flex items-center gap-3 font-mono flex-1 text-left">
+                                            <div className="flex items-center gap-3 font-mono flex-1 text-left overflow-hidden">
                                                 <span className="text-amber-500/80 w-4 shrink-0 text-xs">{i+1}</span>
                                                 <span className="text-white/70 text-sm leading-none truncate w-24 sm:w-28">{s.text}</span>
                                             </div>
 
-                                            <div className="flex items-center h-full">
+                                            <div className="flex items-center h-full shrink-0">
                                                 <div className="w-24 flex justify-center items-center h-full">
                                                     <div className="flex items-center justify-center relative w-full">
-                                                        <span className="w-6 opacity-0 pointer-events-none">s</span> 
+                                                        <span className="inline-block w-6 opacity-0 pointer-events-none">s</span> 
                                                         <input 
                                                             type="number" 
                                                             value={s.duration} 
@@ -511,13 +510,13 @@
                                                             onChange={(e) => handleStepChange(i, 'duration', e.target.value)}
                                                             className="w-10 bg-transparent text-center outline-none text-white text-sm focus:text-white font-mono"
                                                         />
-                                                        <span className="w-6 text-left ml-0.5 text-xs text-white/40 font-mono lowercase">s</span>
+                                                        <span className="inline-block w-6 text-left ml-0.5 text-xs text-white/40 font-mono lowercase">s</span>
                                                     </div>
                                                 </div>
 
                                                 <div className="w-24 flex justify-center items-center h-full">
                                                     <div className="flex items-center justify-center relative w-full">
-                                                        <span className="w-6 opacity-0 pointer-events-none">g</span>
+                                                        <span className="inline-block w-6 opacity-0 pointer-events-none">g</span>
                                                         <input 
                                                             type="number" 
                                                             value={s.weight} 
@@ -528,7 +527,7 @@
                                                             onChange={(e) => handleStepChange(i, 'weight', e.target.value)}
                                                             className="w-10 bg-transparent text-center outline-none text-white text-sm focus:text-white font-mono"
                                                         />
-                                                        <span className="w-6 text-left text-[10px] font-normal text-white/40 ml-0.5 font-mono lowercase">g</span>
+                                                        <span className="inline-block w-6 text-left text-[10px] font-normal text-white/40 ml-0.5 font-mono lowercase">g</span>
                                                     </div>
                                                 </div>
                                                 
@@ -550,20 +549,20 @@
                                         <div className="flex-1 flex items-center gap-3 pl-4">
                                             <span className="text-[10px] uppercase text-amber-500 font-bold tracking-[0.2em]">Totals</span>
                                         </div>
-                                        <div className="flex items-center">
-                                            {/* 總計對齊修正：使用與數據行相同的結構 */}
-                                            <div className="w-24 flex justify-center items-center">
+                                        <div className="flex items-center shrink-0">
+                                            {/* Totals 數字對齊修正：採用與數據行完全相同的結構 */}
+                                            <div className="w-24 flex justify-center items-center h-full">
                                                 <div className="flex items-center justify-center w-full">
-                                                    <span className="w-6 opacity-0 pointer-events-none">s</span>
-                                                    <span className="text-white font-mono text-sm w-10 text-center">{activeTotalTime}</span>
-                                                    <span className="w-6 text-left ml-0.5 text-xs text-white/20 font-mono lowercase">s</span>
+                                                    <span className="inline-block w-6 shrink-0 opacity-0">s</span>
+                                                    <span className="inline-block w-10 text-white font-mono text-sm text-center">{activeTotalTime}</span>
+                                                    <span className="inline-block w-6 text-left ml-0.5 text-xs text-white/20 font-mono lowercase">s</span>
                                                 </div>
                                             </div>
-                                            <div className="w-24 flex justify-center items-center">
+                                            <div className="w-24 flex justify-center items-center h-full">
                                                 <div className="flex items-center justify-center w-full">
-                                                    <span className="w-6 opacity-0 pointer-events-none">g</span>
-                                                    <span className="text-white font-mono text-sm w-10 text-center">{Math.round(activeTotalWater)}</span>
-                                                    <span className="w-6 text-[10px] text-left ml-0.5 opacity-20 font-mono lowercase">g</span>
+                                                    <span className="inline-block w-6 shrink-0 opacity-0">g</span>
+                                                    <span className="inline-block w-10 text-white font-mono text-sm text-center">{Math.round(activeTotalWater)}</span>
+                                                    <span className="inline-block w-6 text-[10px] text-left ml-0.5 opacity-20 font-mono lowercase">g</span>
                                                 </div>
                                             </div>
                                             <div className="w-4 mr-4"></div>
@@ -617,7 +616,7 @@
                                         </div>
                                     )}
                                 </section>
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.14</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.15</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
