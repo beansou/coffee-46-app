@@ -481,7 +481,8 @@
                                         >
                                             <div className="flex items-center gap-3 font-mono flex-1 text-left">
                                                 <span className="text-amber-500/80 w-4 shrink-0 text-xs">{i+1}</span>
-                                                <span className="text-white text-sm leading-none whitespace-nowrap">{s.text}</span>
+                                                {/* 改動：鎖定寬度 w-24/28，顏色變暗 text-white/70，並加入 truncate */}
+                                                <span className="text-white/70 text-sm leading-none truncate w-24 sm:w-28">{s.text}</span>
                                             </div>
 
                                             <div className="flex items-center h-full">
@@ -599,7 +600,7 @@
                                         </div>
                                     )}
                                 </section>
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.12</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.13</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
