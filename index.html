@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>4:6 Future Brew</title>
+    <title>Precision Brew</title>
     
     <!-- iOS PWA Settings -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="4:6 Brew">
+    <meta name="apple-mobile-web-app-title" content="Precision Brew">
     <meta name="theme-color" content="#000000">
 
     <link rel="apple-touch-icon" href="my_coffee_logo.png">
@@ -180,8 +180,8 @@
         const App = () => {
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
-            const [flavor, setFlavor] = useState('vibrant_fruit'); 
-            const [strength, setStrength] = useState('strong');
+            const [strategy, setStrategy] = useState('46method'); 
+            const [subOption, setSubOption] = useState('clean'); 
             
             const [brewSteps, setBrewSteps] = useState([]);
             const [activeEditIndex, setActiveEditIndex] = useState(null);
@@ -209,46 +209,42 @@
             const targetTotalWater = beans * ratio;
 
             const baseTotalTime = useMemo(() => {
-                if (flavor === 'vibrant_fruit') return 30 + 50 + 40 + 30;
-                if (flavor === 'vibrant_classic') return 30 + 50 + 45 + 35 + 50;
-                let baseSteps = [{d: 45}, {d: 45}];
-                if (strength === 'strong') baseSteps.push({d: 40}, {d: 30}, {d: 50});
-                else baseSteps.push({d: 40}, {d: 80});
-                return baseSteps.reduce((acc, s) => acc + s.d, 0);
-            }, [flavor, strength]);
+                if (strategy === '46method') {
+                    return subOption === 'strong' ? (45+45+40+30+50) : (45+45+40+50);
+                } else {
+                    return subOption === 'classic' ? (30+50+45+35+50) : (30+50+40+30);
+                }
+            }, [strategy, subOption]);
 
             const generateSteps = useCallback(() => {
                 let steps = [];
-                const factor = targetTotalWater / 300;
+                const unit = targetTotalWater / 300;
 
-                if (flavor === 'vibrant_fruit') {
-                    const unit = targetTotalWater / 300;
-                    steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
-                    steps.push({ weight: 90 * unit, text: "Flavor", duration: 50 });
-                    steps.push({ weight: 100 * unit, text: "Extraction", duration: 40 });
-                    steps.push({ weight: 75 * unit, text: "Draw Down", duration: 30 });
-                } else if (flavor === 'vibrant_classic') {
-                    const unit = targetTotalWater / 300;
-                    steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
-                    steps.push({ weight: 85 * unit, text: "Richness", duration: 50 });
-                    steps.push({ weight: 70 * unit, text: "Balance", duration: 45 });
-                    steps.push({ weight: 60 * unit, text: "Body", duration: 35 });
-                    steps.push({ weight: 50 * unit, text: "Finish", duration: 50 });
-                } else {
-                    let p1_1, p1_2;
-                    if (flavor === 'sweet') { p1_1 = 50 * factor; p1_2 = 70 * factor; }
-                    else { p1_1 = 60 * factor; p1_2 = 60 * factor; }
-                    steps.push({ weight: p1_1, text: "Bloom", duration: 45 });
-                    steps.push({ weight: p1_2, text: "Flavor", duration: 45 });
-                    if (strength === 'strong') {
-                        const w = 60 * factor;
-                        steps.push({ weight: w, text: "Strength 1", duration: 40 });
-                        steps.push({ weight: w, text: "Strength 2", duration: 30 });
-                        steps.push({ weight: w, text: "Draw Down", duration: 50 });
+                if (strategy === '46method') {
+                    if (subOption === 'clean') {
+                        steps.push({ weight: 50 * unit, text: "Bloom", duration: 45 });
+                        steps.push({ weight: 70 * unit, text: "Sweetness", duration: 45 });
+                        steps.push({ weight: 90 * unit, text: "Body 1", duration: 40 });
+                        steps.push({ weight: 90 * unit, text: "Body 2", duration: 50 });
                     } else {
-                        const w = 60 * factor;
-                        steps.push({ weight: w, text: "Strength", duration: 40 });
-                        steps.push({ weight: w, text: "Draw Down", duration: 80 });
+                        steps.push({ weight: 50 * unit, text: "Bloom", duration: 45 });
+                        steps.push({ weight: 70 * unit, text: "Sweetness", duration: 45 });
+                        steps.push({ weight: 60 * unit, text: "Strength 1", duration: 40 });
+                        steps.push({ weight: 60 * unit, text: "Strength 2", duration: 30 });
+                        steps.push({ weight: 60 * unit, text: "Strength 3", duration: 50 });
+                    }
+                } else {
+                    if (subOption === 'fruit') {
+                        steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
+                        steps.push({ weight: 90 * unit, text: "Flavor", duration: 50 });
+                        steps.push({ weight: 100 * unit, text: "Extraction", duration: 40 });
+                        steps.push({ weight: 75 * unit, text: "Draw Down", duration: 30 });
+                    } else {
+                        steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
+                        steps.push({ weight: 85 * unit, text: "Richness", duration: 50 });
+                        steps.push({ weight: 70 * unit, text: "Balance", duration: 45 });
+                        steps.push({ weight: 60 * unit, text: "Body", duration: 35 });
+                        steps.push({ weight: 50 * unit, text: "Finish", duration: 50 });
                     }
                 }
 
@@ -258,7 +254,7 @@
                     steps = steps.map(s => ({ ...s, duration: Math.round(s.duration * scale) }));
                 }
                 return steps.map((s, i) => ({ ...s, weight: Math.round(s.weight), id: i }));
-            }, [flavor, strength, targetTotalWater, customTotalTime]);
+            }, [strategy, subOption, targetTotalWater, customTotalTime]);
 
             useEffect(() => {
                 const newSteps = generateSteps();
@@ -414,7 +410,7 @@
                         <BackgroundEffect mode="idle" />
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
-                                <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">4:6 Method</h1>
+                                <div className="flex items-center gap-3"><AppLogo size={42} /><div><h1 className="text-xl font-medium tracking-wide">Precision Brew</h1>
                                 <p className="text-xs text-white/40 uppercase tracking-widest">Capsule One</p></div></div>
                             </header>
 
@@ -466,59 +462,60 @@
                                 </section>
 
                                 <section className="space-y-3">
-                                    <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor Profile</label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <label className="text-sm text-white/60 ml-2 font-medium tracking-wide text-amber-500/80 uppercase tracking-[0.2em] text-[11px]">Brewing Strategy</label>
+                                    <div className="grid grid-cols-2 gap-2">
                                         {[
-                                            {id: 'sweet', label: 'Sweet'}, 
-                                            {id: 'balanced', label: 'Balanced'}, 
+                                            {id: '46method', label: '4:6 Method'}, 
                                             {id: 'vibrant', label: 'Vibrant'}
                                         ].map(opt => (
                                             <button 
                                                 key={opt.id} 
                                                 onClick={() => {
-                                                    if (opt.id === 'vibrant') {
-                                                        if (!flavor.includes('vibrant')) setFlavor('vibrant_fruit');
-                                                    } else {
-                                                        setFlavor(opt.id);
-                                                    }
+                                                    setStrategy(opt.id);
+                                                    setSubOption(opt.id === '46method' ? 'clean' : 'fruit');
                                                     setCustomTotalTime(0);
                                                 }} 
-                                                className={`glass-button rounded-xl py-4 text-sm font-medium transition-all ${((opt.id === 'vibrant' && flavor.includes('vibrant')) || flavor === opt.id) ? 'active ring-1 ring-amber-500/50' : ''}`}
+                                                className={`glass-button rounded-xl py-5 text-sm font-bold tracking-wider transition-all ${strategy === opt.id ? 'active ring-1 ring-amber-500/50' : ''}`}
                                             >
                                                 {opt.label}
                                             </button>
                                         ))}
                                     </div>
                                     
-                                    {/* Vibrant 子選項動態展開 - 已根據要求移除 Acidic/Fruit 與 Nutty/Dark 標籤 */}
-                                    {flavor.includes('vibrant') && (
-                                        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
-                                            <button 
-                                                onClick={() => setFlavor('vibrant_fruit')}
-                                                className={`glass-button rounded-xl py-5 px-2 flex items-center justify-center transition-all ${flavor === 'vibrant_fruit' ? 'active bg-amber-500/10' : 'opacity-60'}`}
-                                            >
-                                                <span className="text-xs font-medium tracking-wide">Floral & Berry</span>
-                                            </button>
-                                            <button 
-                                                onClick={() => setFlavor('vibrant_classic')}
-                                                className={`glass-button rounded-xl py-5 px-2 flex items-center justify-center transition-all ${flavor === 'vibrant_classic' ? 'active bg-amber-500/10' : 'opacity-60'}`}
-                                            >
-                                                <span className="text-xs font-medium tracking-wide">Classic Soul</span>
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
+                                        {strategy === '46method' ? (
+                                            <>
+                                                <button 
+                                                    onClick={() => setSubOption('clean')}
+                                                    className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'clean' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                                >
+                                                    <span className="text-xs font-medium tracking-wide">Clean</span>
+                                                </button>
+                                                <button 
+                                                    onClick={() => setSubOption('strong')}
+                                                    className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'strong' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                                >
+                                                    <span className="text-xs font-medium tracking-wide">Strong</span>
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button 
+                                                    onClick={() => setSubOption('fruit')}
+                                                    className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'fruit' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                                >
+                                                    <span className="text-xs font-medium tracking-wide">Floral & Berry</span>
+                                                </button>
+                                                <button 
+                                                    onClick={() => setSubOption('classic')}
+                                                    className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'classic' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                                >
+                                                    <span className="text-xs font-medium tracking-wide">Classic Soul</span>
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </section>
-
-                                {!flavor.includes('vibrant') && (
-                                    <section className="space-y-3 animate-in fade-in duration-500">
-                                        <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Strength</label>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {[{id: 'standard', label: 'Clean'}, {id: 'strong', label: 'Strong'}].map(opt => (
-                                                <button key={opt.id} onClick={() => setStrength(opt.id)} className={`glass-button rounded-2xl py-5 flex items-center justify-center ${strength === opt.id ? 'active' : ''}`}><span className="text-sm font-medium tracking-wider">{opt.label}</span></button>
-                                            ))}
-                                        </div>
-                                    </section>
-                                )}
 
                                 <section className="glass-panel rounded-[2rem] p-4 pb-0 space-y-0 overflow-hidden">
                                     <div className="flex justify-between items-center border-b border-white/10 h-10 px-4">
@@ -671,7 +668,7 @@
                                         </div>
                                     )}
                                 </section>
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.34</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.36</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
