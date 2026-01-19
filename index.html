@@ -180,7 +180,7 @@
         const App = () => {
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
-            const [flavor, setFlavor] = useState('sweet');
+            const [flavor, setFlavor] = useState('vibrant_fruit'); 
             const [strength, setStrength] = useState('strong');
             
             const [brewSteps, setBrewSteps] = useState([]);
@@ -209,38 +209,37 @@
             const targetTotalWater = beans * ratio;
 
             const baseTotalTime = useMemo(() => {
-                let baseSteps = [];
-                const factor = targetTotalWater / 300;
-                if (flavor === 'vibrant') {
-                    baseSteps = [ {d:40}, {d:50}, {d:30}, {d:30}, {d:30} ];
-                } else {
-                    baseSteps.push({d: 45}, {d: 45});
-                    if (strength === 'strong') baseSteps.push({d: 40}, {d: 30}, {d: 50});
-                    else baseSteps.push({d: 40}, {d: 80});
-                }
+                if (flavor === 'vibrant_fruit') return 30 + 50 + 40 + 30;
+                if (flavor === 'vibrant_classic') return 30 + 50 + 45 + 35 + 50;
+                let baseSteps = [{d: 45}, {d: 45}];
+                if (strength === 'strong') baseSteps.push({d: 40}, {d: 30}, {d: 50});
+                else baseSteps.push({d: 40}, {d: 80});
                 return baseSteps.reduce((acc, s) => acc + s.d, 0);
-            }, [flavor, strength, targetTotalWater]);
+            }, [flavor, strength]);
 
             const generateSteps = useCallback(() => {
                 let steps = [];
                 const factor = targetTotalWater / 300;
 
-                if (flavor === 'vibrant') {
+                if (flavor === 'vibrant_fruit') {
                     const unit = targetTotalWater / 300;
-                    steps.push({ weight: 30 * unit, text: "Bloom", duration: 40 });
-                    steps.push({ weight: 70 * unit, text: "Flavor", duration: 50 });
-                    steps.push({ weight: 100 * unit, text: "Extraction", duration: 30 });
-                    steps.push({ weight: 50 * unit, text: "Balance 1", duration: 30 });
-                    steps.push({ weight: 50 * unit, text: "Balance 2", duration: 30 });
+                    steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
+                    steps.push({ weight: 90 * unit, text: "Flavor", duration: 50 });
+                    steps.push({ weight: 100 * unit, text: "Extraction", duration: 40 });
+                    steps.push({ weight: 75 * unit, text: "Draw Down", duration: 30 });
+                } else if (flavor === 'vibrant_classic') {
+                    const unit = targetTotalWater / 300;
+                    steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
+                    steps.push({ weight: 85 * unit, text: "Richness", duration: 50 });
+                    steps.push({ weight: 70 * unit, text: "Balance", duration: 45 });
+                    steps.push({ weight: 60 * unit, text: "Body", duration: 35 });
+                    steps.push({ weight: 50 * unit, text: "Finish", duration: 50 });
                 } else {
                     let p1_1, p1_2;
                     if (flavor === 'sweet') { p1_1 = 50 * factor; p1_2 = 70 * factor; }
-                    else if (flavor === 'balanced') { p1_1 = 60 * factor; p1_2 = 60 * factor; }
-                    else { p1_1 = 70 * factor; p1_2 = 50 * factor; }
-
+                    else { p1_1 = 60 * factor; p1_2 = 60 * factor; }
                     steps.push({ weight: p1_1, text: "Bloom", duration: 45 });
                     steps.push({ weight: p1_2, text: "Flavor", duration: 45 });
-
                     if (strength === 'strong') {
                         const w = 60 * factor;
                         steps.push({ weight: w, text: "Strength 1", duration: 40 });
@@ -467,16 +466,50 @@
                                 </section>
 
                                 <section className="space-y-3">
-                                    <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor</label>
+                                    <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Flavor Profile</label>
                                     <div className="grid grid-cols-3 gap-2">
-                                        {/* 修改：移除 acidic 選項，改為 grid-cols-3 */}
-                                        {[{id: 'sweet', label: 'Sweet'}, {id: 'balanced', label: 'Balance'}, {id: 'vibrant', label: 'Vibrant'}].map(opt => (
-                                            <button key={opt.id} onClick={() => {setFlavor(opt.id); setCustomTotalTime(0);}} className={`glass-button rounded-xl py-4 text-[13px] font-medium ${flavor === opt.id ? 'active' : ''}`}>{opt.label}</button>
+                                        {[
+                                            {id: 'sweet', label: 'Sweet'}, 
+                                            {id: 'balanced', label: 'Balanced'}, 
+                                            {id: 'vibrant', label: 'Vibrant'}
+                                        ].map(opt => (
+                                            <button 
+                                                key={opt.id} 
+                                                onClick={() => {
+                                                    if (opt.id === 'vibrant') {
+                                                        if (!flavor.includes('vibrant')) setFlavor('vibrant_fruit');
+                                                    } else {
+                                                        setFlavor(opt.id);
+                                                    }
+                                                    setCustomTotalTime(0);
+                                                }} 
+                                                className={`glass-button rounded-xl py-4 text-sm font-medium transition-all ${((opt.id === 'vibrant' && flavor.includes('vibrant')) || flavor === opt.id) ? 'active ring-1 ring-amber-500/50' : ''}`}
+                                            >
+                                                {opt.label}
+                                            </button>
                                         ))}
                                     </div>
+                                    
+                                    {/* Vibrant 子選項動態展開 - 已根據要求移除 Acidic/Fruit 與 Nutty/Dark 標籤 */}
+                                    {flavor.includes('vibrant') && (
+                                        <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-300">
+                                            <button 
+                                                onClick={() => setFlavor('vibrant_fruit')}
+                                                className={`glass-button rounded-xl py-5 px-2 flex items-center justify-center transition-all ${flavor === 'vibrant_fruit' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                            >
+                                                <span className="text-xs font-medium tracking-wide">Floral & Berry</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => setFlavor('vibrant_classic')}
+                                                className={`glass-button rounded-xl py-5 px-2 flex items-center justify-center transition-all ${flavor === 'vibrant_classic' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                            >
+                                                <span className="text-xs font-medium tracking-wide">Classic Soul</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </section>
 
-                                {flavor !== 'vibrant' && (
+                                {!flavor.includes('vibrant') && (
                                     <section className="space-y-3 animate-in fade-in duration-500">
                                         <label className="text-sm text-white/60 ml-2 font-medium tracking-wide">Strength</label>
                                         <div className="grid grid-cols-2 gap-3">
@@ -638,7 +671,7 @@
                                         </div>
                                     )}
                                 </section>
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.26</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">4.34</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
