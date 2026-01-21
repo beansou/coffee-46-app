@@ -203,6 +203,7 @@
             const lastValueRef = useRef(null);
             const beansInputRef = useRef(null);
             const ratioControlRef = useRef(null);
+            const brewPlanRef = useRef(null); 
             const intervalRef = useRef(null);
             const audioCtxRef = useRef(null);
 
@@ -212,7 +213,7 @@
                 if (strategy === '46method') {
                     return subOption === 'strong' ? (45+45+40+30+50) : (45+45+40+50);
                 } else {
-                    return subOption === 'classic' ? (30+50+45+35+50) : (30+50+40+30);
+                    return subOption === 'classic' ? (30+50+50+40+40) : (30+50+40+30);
                 }
             }, [strategy, subOption]);
 
@@ -223,15 +224,15 @@
                 if (strategy === '46method') {
                     if (subOption === 'clean') {
                         steps.push({ weight: 50 * unit, text: "Bloom", duration: 45 });
-                        steps.push({ weight: 70 * unit, text: "Sweetness", duration: 45 });
-                        steps.push({ weight: 90 * unit, text: "Body 1", duration: 40 });
-                        steps.push({ weight: 90 * unit, text: "Body 2", duration: 50 });
+                        steps.push({ weight: 70 * unit, text: "Flavor", duration: 45 });
+                        steps.push({ weight: 90 * unit, text: "Body", duration: 40 });
+                        steps.push({ weight: 90 * unit, text: "Draw Down", duration: 50 });
                     } else {
                         steps.push({ weight: 50 * unit, text: "Bloom", duration: 45 });
-                        steps.push({ weight: 70 * unit, text: "Sweetness", duration: 45 });
-                        steps.push({ weight: 60 * unit, text: "Strength 1", duration: 40 });
-                        steps.push({ weight: 60 * unit, text: "Strength 2", duration: 30 });
-                        steps.push({ weight: 60 * unit, text: "Strength 3", duration: 50 });
+                        steps.push({ weight: 70 * unit, text: "Flavor", duration: 45 });
+                        steps.push({ weight: 60 * unit, text: "Body 1", duration: 40 });
+                        steps.push({ weight: 60 * unit, text: "Body 2", duration: 30 });
+                        steps.push({ weight: 60 * unit, text: "Draw Down", duration: 50 });
                     }
                 } else {
                     if (subOption === 'fruit') {
@@ -240,11 +241,12 @@
                         steps.push({ weight: 100 * unit, text: "Extraction", duration: 40 });
                         steps.push({ weight: 75 * unit, text: "Draw Down", duration: 30 });
                     } else {
+                        // Classic Soul - New Recipe (v5.4)
                         steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
-                        steps.push({ weight: 85 * unit, text: "Richness", duration: 50 });
-                        steps.push({ weight: 70 * unit, text: "Balance", duration: 45 });
-                        steps.push({ weight: 60 * unit, text: "Body", duration: 35 });
-                        steps.push({ weight: 50 * unit, text: "Finish", duration: 50 });
+                        steps.push({ weight: 85 * unit, text: "Flavor", duration: 50 }); 
+                        steps.push({ weight: 70 * unit, text: "Balance", duration: 50 });
+                        steps.push({ weight: 60 * unit, text: "Body", duration: 40 });
+                        steps.push({ weight: 50 * unit, text: "Draw Down", duration: 40 });
                     }
                 }
 
@@ -263,11 +265,16 @@
 
             useEffect(() => {
                 const handleClickOutside = (e) => {
-                    if (ratioControlRef.current && !ratioControlRef.current.contains(e.target)) setIsEditingRatio(false);
+                    if (ratioControlRef.current && !ratioControlRef.current.contains(e.target)) {
+                        setIsEditingRatio(false);
+                    }
+                    if (brewPlanRef.current && !brewPlanRef.current.contains(e.target)) {
+                        setActiveEditIndex(null);
+                    }
                 };
                 document.addEventListener('mousedown', handleClickOutside);
                 return () => document.removeEventListener('mousedown', handleClickOutside);
-            }, [isEditingRatio]);
+            }, [isEditingRatio, activeEditIndex]);
 
             const stepsWithCumulative = (() => {
                 let cum = 0;
@@ -517,7 +524,7 @@
                                     </div>
                                 </section>
 
-                                <section className="glass-panel rounded-[2rem] p-4 pb-0 space-y-0 overflow-hidden">
+                                <section ref={brewPlanRef} className="glass-panel rounded-[2rem] p-4 pb-0 space-y-0 overflow-hidden">
                                     <div className="flex justify-between items-center border-b border-white/10 h-10 px-4">
                                         <h3 className="flex-1 text-xs uppercase tracking-widest text-white/40 font-medium">Brew Plan</h3>
                                         <div className="flex items-center">
@@ -541,7 +548,10 @@
                                     {brewSteps.map((s, i) => (
                                         <div 
                                             key={i} 
-                                            onClick={() => setActiveEditIndex(activeEditIndex === i ? null : i)}
+                                            onClick={(e) => {
+                                                e.stopPropagation(); 
+                                                setActiveEditIndex(activeEditIndex === i ? null : i);
+                                            }}
                                             className={`flex justify-between items-center h-14 px-4 transition-all border-b border-white/5 last:border-0 ${activeEditIndex === i ? 'bg-white/5 rounded-xl border-b-transparent shadow-inner' : ''}`}
                                         >
                                             <div className="flex items-center gap-3 font-mono flex-1 text-left overflow-hidden">
@@ -668,7 +678,7 @@
                                         </div>
                                     )}
                                 </section>
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">5.0</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">5.4</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
