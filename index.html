@@ -190,7 +190,7 @@
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
             const [strategy, setStrategy] = useState('46method'); 
-            const [subOption, setSubOption] = useState('clean'); 
+            const [subOption, setSubOption] = useState('strong'); 
             
             const [brewSteps, setBrewSteps] = useState([]);
             const [activeEditIndex, setActiveEditIndex] = useState(null);
@@ -220,7 +220,7 @@
 
             const baseTotalTime = useMemo(() => {
                 if (strategy === '46method') {
-                    return subOption === 'strong' ? (45+45+40+30+50) : (45+45+40+50);
+                    return subOption === 'ten' ? (30 + 15 * 9) : (45+45+40+30+50);
                 } else {
                     return subOption === 'classic' ? (30+50+50+40+40) : (30+50+40+30);
                 }
@@ -231,12 +231,13 @@
                 const unit = targetTotalWater / 300;
 
                 if (strategy === '46method') {
-                    if (subOption === 'clean') {
-                        steps.push({ weight: 50 * unit, text: "Bloom", duration: 45 });
-                        steps.push({ weight: 70 * unit, text: "Flavor", duration: 45 });
-                        steps.push({ weight: 90 * unit, text: "Body", duration: 40 });
-                        steps.push({ weight: 90 * unit, text: "Draw Down", duration: 50 });
-                    } else {
+                    if (subOption === 'ten') {
+                        steps.push({ weight: 30 * unit, text: "Bloom", duration: 30 });
+                        for (let i = 2; i <= 9; i++) {
+                            steps.push({ weight: 30 * unit, text: `Pour ${i}`, duration: 15 });
+                        }
+                        steps.push({ weight: 30 * unit, text: "Draw Down", duration: 15 });
+                    } else { // strong
                         steps.push({ weight: 50 * unit, text: "Bloom", duration: 45 });
                         steps.push({ weight: 70 * unit, text: "Flavor", duration: 45 });
                         steps.push({ weight: 60 * unit, text: "Body 1", duration: 40 });
@@ -250,7 +251,7 @@
                         steps.push({ weight: 100 * unit, text: "Extraction", duration: 40 });
                         steps.push({ weight: 75 * unit, text: "Draw Down", duration: 30 });
                     } else {
-                        // Classic Soul - v5.5 Adjustments
+                        // Classic Soul
                         steps.push({ weight: 35 * unit, text: "Bloom", duration: 30 });
                         steps.push({ weight: 85 * unit, text: "Flavor", duration: 50 }); 
                         steps.push({ weight: 75 * unit, text: "Balance", duration: 50 });
@@ -488,7 +489,7 @@
                                                 key={opt.id} 
                                                 onClick={() => {
                                                     setStrategy(opt.id);
-                                                    setSubOption(opt.id === '46method' ? 'clean' : 'fruit');
+                                                    setSubOption(opt.id === '46method' ? 'strong' : 'fruit');
                                                     setCustomTotalTime(0);
                                                 }} 
                                                 className={`glass-button rounded-xl py-5 text-sm font-bold tracking-wider transition-all ${strategy === opt.id ? 'active ring-1 ring-amber-500/50' : ''}`}
@@ -502,16 +503,16 @@
                                         {strategy === '46method' ? (
                                             <>
                                                 <button 
-                                                    onClick={() => setSubOption('clean')}
-                                                    className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'clean' ? 'active bg-amber-500/10' : 'opacity-60'}`}
-                                                >
-                                                    <span className="text-xs font-medium tracking-wide">Clean</span>
-                                                </button>
-                                                <button 
                                                     onClick={() => setSubOption('strong')}
                                                     className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'strong' ? 'active bg-amber-500/10' : 'opacity-60'}`}
                                                 >
                                                     <span className="text-xs font-medium tracking-wide">Strong</span>
+                                                </button>
+                                                <button 
+                                                    onClick={() => setSubOption('ten')}
+                                                    className={`glass-button rounded-xl py-4 flex items-center justify-center transition-all ${subOption === 'ten' ? 'active bg-amber-500/10' : 'opacity-60'}`}
+                                                >
+                                                    <span className="text-xs font-medium tracking-wide">Ten</span>
                                                 </button>
                                             </>
                                         ) : (
@@ -687,7 +688,7 @@
                                         </div>
                                     )}
                                 </section>
-                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">5.5</p></div>
+                                <div className="w-full flex justify-end pr-2 opacity-30"><p className="text-[10px] text-white font-mono tracking-widest uppercase tracking-[0.2em]">5.6</p></div>
                             </main>
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 flex justify-center z-20 bg-gradient-to-t from-black via-black/80 to-transparent pt-32 pb-12 pointer-events-none">
@@ -779,3 +780,4 @@
     </script>
 </body>
 </html>
+
