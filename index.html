@@ -4,14 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Precision Brew</title>
+    <meta name="description" content="Offline pour-over coffee timer and brew calculator.">
     
+    <!-- iOS PWA Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Precision Brew">
     <meta name="theme-color" content="#000000">
 
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
     <!-- Dependencies -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="vendor/react.production.min.js"></script>
+    <script src="vendor/react-dom.production.min.js"></script>
+    <script src="vendor/babel.min.js"></script>
+    <script src="vendor/tailwindcss.js"></script>
     
     <style>
         body { 
@@ -97,12 +106,67 @@
         .ring-segment {
             transition: stroke 0.8s ease-in-out, stroke-opacity 0.8s ease-in-out;
         }
+
+        .offline-pill {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 0px) + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 60;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.72);
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            color: #fbbf24;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            backdrop-filter: blur(16px);
+        }
+
+        .offline-pill.visible {
+            display: flex;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').then((registration) => {
+                    if (registration.waiting) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+
+                    registration.addEventListener('updatefound', () => {
+                        const worker = registration.installing;
+                        if (!worker) return;
+                        worker.addEventListener('statechange', () => {
+                            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                                worker.postMessage({ type: 'SKIP_WAITING' });
+                            }
+                        });
+                    });
+                }).catch((error) => {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
+
+    <script>
+        Babel.registerPreset('react-classic', {
+            presets: [[Babel.availablePresets.react, { runtime: 'classic' }]]
+        });
+    </script>
+
+    <script type="text/babel" data-presets="react-classic">
         const { useState, useEffect, useRef, useCallback, useMemo } = React;
         
         const IconBase = ({ size = 24, className = "", children, viewBox="0 0 24 24" }) => (
@@ -171,6 +235,7 @@
         };
 
         const App = () => {
+            const [isOffline, setIsOffline] = useState(!navigator.onLine);
             const [beans, setBeans] = useState(20);
             const [ratio, setRatio] = useState(15);
             const [strategy, setStrategy] = useState('46method'); 
@@ -201,6 +266,16 @@
             const audioCtxRef = useRef(null);
 
             const targetTotalWater = beans * ratio;
+
+            useEffect(() => {
+                const updateOnlineState = () => setIsOffline(!navigator.onLine);
+                window.addEventListener('online', updateOnlineState);
+                window.addEventListener('offline', updateOnlineState);
+                return () => {
+                    window.removeEventListener('online', updateOnlineState);
+                    window.removeEventListener('offline', updateOnlineState);
+                };
+            }, []);
 
             const baseTotalTime = useMemo(() => {
                 if (strategy === '46method') {
@@ -393,6 +468,7 @@
             if (countdown !== null) {
                 return (
                     <div className="h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-black">
+                        <div className={`offline-pill ${isOffline ? 'visible' : ''}`}>Offline Ready</div>
                         <BackgroundEffect mode={countdown === 0 ? "go" : "countdown"} />
                         <div className="absolute top-[35%] left-0 right-0 flex justify-center items-center h-[300px] -translate-y-1/2">
                              <h1 className={`text-[12rem] font-extralight leading-none tabular-nums text-center w-full text-white ${countdown === 0 ? 'text-glow-go scale-110' : 'text-glow'}`}>{countdown === 0 ? "GO" : countdown}</h1>
@@ -408,6 +484,7 @@
             if (!isBrewing && !isObserving && timer === 0) {
                 return (
                     <div className="h-screen w-full flex flex-col relative overflow-hidden bg-black">
+                        <div className={`offline-pill ${isOffline ? 'visible' : ''}`}>Offline Ready</div>
                         <BackgroundEffect mode="idle" />
                         <div className="flex-1 w-full overflow-y-auto no-scrollbar z-10 relative">
                             <header className="pt-14 pb-4 px-6 flex justify-between items-center">
@@ -687,6 +764,7 @@
 
             return (
                 <div className="h-screen w-full flex flex-col relative overflow-hidden bg-black text-white">
+                    <div className={`offline-pill ${isOffline ? 'visible' : ''}`}>Offline Ready</div>
                     <BackgroundEffect mode={isObserving ? "observing" : "brewing"} />
                     <header className="absolute top-0 left-0 right-0 pt-14 pb-2 px-6 flex justify-between items-center z-20">
                         <button onClick={handleReset} className="w-10 h-10 rounded-full glass-button flex items-center justify-center text-white/60 hover:text-white z-30 shrink-0">
