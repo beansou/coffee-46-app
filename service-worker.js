@@ -1,81 +1,45 @@
-const CACHE_NAME = 'precision-brew-v1';
+// 每次你更新了 index.html 之後，只要來這裡把後面的數字改掉 (例如改 v5.7)，
+// 瀏覽器就會知道有新版本，並自動清除舊的黑屏快取！
+const CACHE_NAME = 'precision-brew-v5.6';
 
-const LOCAL_ASSETS = [
+const ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './my_coffee_logo.png',
-  './icons/apple-touch-icon.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './manifest.json'
 ];
 
-const EXTERNAL_ASSETS = [
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js',
-  'https://cdn.tailwindcss.com'
-];
-
+// 1. 安裝階段：強制立刻接管，不等待
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); 
   event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(LOCAL_ASSETS);
-      await Promise.allSettled(
-        EXTERNAL_ASSETS.map((url) => cache.add(url))
-      );
-      self.skipWaiting();
-    })()
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
   );
 });
 
+// 2. 啟動階段：無情刪除所有舊版本的快取 (破解黑屏的關鍵)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(
-        keys.map((key) => (key === CACHE_NAME ? null : caches.delete(key)))
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('發現新版本，清除舊快取:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
       );
-      self.clients.claim();
-    })()
+    }).then(() => self.clients.claim()) // 立即控制所有頁面
   );
 });
 
+// 3. 攔截請求：採用「網路優先 (Network First)」策略
+// 這樣只要有網路，一定會抓最新版；沒網路時，才會拿快取出來用 (完美離線)
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  const isNavigation = event.request.mode === 'navigate';
-  if (isNavigation) {
-    event.respondWith(
-      (async () => {
-        const cache = await caches.open(CACHE_NAME);
-        const cached = await cache.match('./index.html');
-        if (cached) return cached;
-        try {
-          const network = await fetch(event.request);
-          cache.put('./index.html', network.clone());
-          return network;
-        } catch (err) {
-          return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
-        }
-      })()
-    );
-    return;
-  }
-
   event.respondWith(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      const cached = await cache.match(event.request);
-      if (cached) return cached;
-      try {
-        const network = await fetch(event.request);
-        cache.put(event.request, network.clone());
-        return network;
-      } catch (err) {
-        return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
-      }
-    })()
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
   );
 });
